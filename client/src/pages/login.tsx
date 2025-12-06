@@ -32,30 +32,14 @@ export default function Login() {
       const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
-    onSuccess: (data) => {
-      if (data.user.status === "pending") {
-        toast({
-          title: "Account Pending",
-          description: "Your account is awaiting administrator approval.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (data.user.status === "rejected") {
-        toast({
-          title: "Account Rejected",
-          description: "Your account has been rejected by the administrator.",
-          variant: "destructive",
-        });
-        return;
-      }
-      login(data.user);
+    onSuccess: (user) => {
+      login(user);
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${data.user.firstName} ${data.user.lastName}`,
+        description: `Logged in as ${user.firstName} ${user.lastName}`,
       });
       
-      switch (data.user.role) {
+      switch (user.role) {
         case "admin":
           setLocation("/admin");
           break;

@@ -32,7 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("epl_user", JSON.stringify(user));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
     setUser(null);
     localStorage.removeItem("epl_user");
   };
