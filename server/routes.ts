@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
+import { io } from "./index";
+import { broadcastSeatUpdate } from "./socket";
 import { 
   insertUserSchema, loginSchema, insertStadiumSchema, 
   insertMatchSchema, insertReservationSchema, updateUserSchema 
@@ -213,7 +215,7 @@ export async function registerRoutes(
     res.json(stadium);
   });
 
-  app.post("/api/stadiums", requireRole("manager"), async (req, res) => {
+  app.post("/api/stadiums", requireRole("admin", "manager"), async (req, res) => {
     try {
       const data = insertStadiumSchema.parse(req.body);
       const stadium = await storage.createStadium(data);
@@ -226,7 +228,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/stadiums/:id", requireRole("manager"), async (req, res) => {
+  app.patch("/api/stadiums/:id", requireRole("admin", "manager"), async (req, res) => {
     try {
       const data = insertStadiumSchema.parse(req.body);
       const stadium = await storage.updateStadium(req.params.id, data);
@@ -242,7 +244,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/stadiums/:id", requireRole("manager"), async (req, res) => {
+  app.delete("/api/stadiums/:id", requireRole("admin", "manager"), async (req, res) => {
     const success = await storage.deleteStadium(req.params.id);
     if (!success) {
       return res.status(400).json({ message: "Cannot delete stadium with scheduled matches" });
@@ -268,7 +270,7 @@ export async function registerRoutes(
     res.json(match);
   });
 
-  app.post("/api/matches", requireRole("manager"), async (req, res) => {
+  app.post("/api/matches", requireRole("admin", "manager"), async (req, res) => {
     try {
       const data = insertMatchSchema.parse(req.body);
       
@@ -289,7 +291,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/matches/:id", requireRole("manager"), async (req, res) => {
+  app.patch("/api/matches/:id", requireRole("admin", "manager"), async (req, res) => {
     try {
       const data = insertMatchSchema.parse(req.body);
       
@@ -313,7 +315,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/matches/:id", requireRole("manager"), async (req, res) => {
+  app.delete("/api/matches/:id", requireRole("admin", "manager"), async (req, res) => {
     const success = await storage.deleteMatch(req.params.id);
     if (!success) {
       return res.status(400).json({ message: "Cannot delete match with reservations" });
@@ -345,7 +347,12 @@ export async function registerRoutes(
       }
       
       const reservations = await storage.createReservation(req.session.userId!, data);
-      res.status(201).json(reservations);
+      
+      // Broadcast seat update to all clients in the match room
+      const reservedSeats = await storage.getReservedSeats(data.matchId);
+      broadcastSeatUpdate(io, data.matchId, reservedSeats);
+      
+      res.status(201).json({ reservations });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors[0].message });
@@ -370,10 +377,20 @@ export async function registerRoutes(
 
   app.delete("/api/reservations/:id", requireApproved, async (req, res) => {
     try {
+      const reservation = await storage.getReservation(req.params.id);
+      const matchId = reservation?.matchId;
+      
       const success = await storage.cancelReservation(req.params.id, req.session.userId!);
       if (!success) {
         return res.status(404).json({ message: "Reservation not found" });
       }
+      
+      // Broadcast seat update after cancellation
+      if (matchId) {
+        const reservedSeats = await storage.getReservedSeats(matchId);
+        broadcastSeatUpdate(io, matchId, reservedSeats);
+      }
+      
       res.json({ message: "Reservation cancelled" });
     } catch (error) {
       if (error instanceof Error) {

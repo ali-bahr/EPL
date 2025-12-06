@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, CreditCard, Loader2, CheckCircle, Ticket } from "lucide-react";
@@ -14,6 +14,7 @@ import { SeatMap } from "@/components/seat-map";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getSocket } from "@/lib/socket";
 import type { MatchWithStadium } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -41,10 +42,52 @@ export default function MatchReserve() {
   const [selectedSeats, setSelectedSeats] = useState<Array<{ row: number; seat: number }>>([]);
   const [step, setStep] = useState<"seats" | "payment" | "confirmation">("seats");
   const [ticketNumbers, setTicketNumbers] = useState<string[]>([]);
+  const [reservedSeats, setReservedSeats] = useState<Array<{ row: number; seat: number }>>([]);
 
   const { data: match, isLoading } = useQuery<MatchWithStadium>({
     queryKey: ["/api/matches", id],
   });
+
+  // Setup Socket.IO for real-time seat updates
+  useEffect(() => {
+    if (!id) return;
+
+    const socket = getSocket();
+
+    // Join the match room
+    socket.emit("join-match", id);
+
+    // Listen for seat updates
+    socket.on("reserved-seats-updated", (data: { matchId: string; reservedSeats: Array<{ row: number; seat: number }> }) => {
+      if (data.matchId === id) {
+        setReservedSeats(data.reservedSeats);
+        // Remove any selected seats that are now reserved
+        setSelectedSeats(prev => 
+          prev.filter(seat => 
+            !data.reservedSeats.some(reserved => 
+              reserved.row === seat.row && reserved.seat === seat.seat
+            )
+          )
+        );
+      }
+    });
+
+    // Request current reserved seats
+    socket.emit("get-reserved-seats", id);
+
+    // Cleanup
+    return () => {
+      socket.emit("leave-match", id);
+      socket.off("reserved-seats-updated");
+    };
+  }, [id]);
+
+  // Initialize reserved seats from match data
+  useEffect(() => {
+    if (match?.reservedSeats) {
+      setReservedSeats(match.reservedSeats);
+    }
+  }, [match?.reservedSeats]);
 
   const form = useForm<PaymentForm>({
     resolver: zodResolver(paymentSchema),
@@ -76,6 +119,7 @@ export default function MatchReserve() {
         description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
+      setStep("seats");
     },
   });
 
@@ -217,7 +261,7 @@ export default function MatchReserve() {
               <SeatMap
                 rows={match.stadium.rows}
                 seatsPerRow={match.stadium.seatsPerRow}
-                reservedSeats={match.reservedSeats}
+                reservedSeats={reservedSeats}
                 selectedSeats={selectedSeats}
                 onSeatSelect={setSelectedSeats}
               />

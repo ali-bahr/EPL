@@ -156,13 +156,15 @@ export function Header() {
 }
 
 function getNavLinks(role: string) {
-  const commonLinks = [{ href: "/matches", label: "Matches" }];
+  const commonLinks = [{ href: "/matches", label: "Browse Matches" }];
 
   switch (role) {
     case "admin":
       return [
-        { href: "/admin", label: "Dashboard" },
+        { href: "/admin", label: "Admin Dashboard" },
         { href: "/admin/users", label: "Users" },
+        { href: "/manager/matches", label: "Manage Matches" },
+        { href: "/manager/stadiums", label: "Stadiums" },
         ...commonLinks,
       ];
     case "manager":

@@ -10,7 +10,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: InsertUser & { role: "fan" | "manager" }): Promise<User>;
   updateUser(id: string, data: UpdateUser): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
@@ -81,6 +81,37 @@ export class MemStorage implements IStorage {
       status: "approved"
     });
 
+    const fanId = randomUUID();
+    this.users.set(fanId, {
+      id: fanId,
+      username: "ali",
+      password: "123456",
+      firstName: "Ali",
+      lastName: "Hassan",
+      birthDate: "1995-05-15",
+      gender: "male",
+      city: "Cairo",
+      address: "Downtown Cairo",
+      email: "ali@example.com",
+      role: "fan",
+      status: "approved"
+    });
+
+    const managerId = randomUUID();
+    this.users.set(managerId, {
+      id: managerId,
+      username: "bahr",
+      password: "123456",
+      firstName: "Ali",
+      lastName: "Hassan",
+      birthDate: "1995-05-15",
+      gender: "male",
+      city: "Cairo",
+      address: "Downtown Cairo",
+      email: "ali@example.com",
+      role: "manager",
+      status: "approved"
+    });
     const stadium1Id = randomUUID();
     const stadium2Id = randomUUID();
     this.stadiums.set(stadium1Id, {
@@ -142,8 +173,9 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: InsertUser & { role: "fan" | "manager" }): Promise<User> {
     const id = randomUUID();
+    // All new users need admin approval
     const user: User = { 
       ...insertUser, 
       id,
@@ -324,7 +356,7 @@ export class MemStorage implements IStorage {
       const reservation: Reservation = {
         id,
         matchId: data.matchId,
-        odId: userId,
+        userId: userId,
         seatRow: seat.row,
         seatNumber: seat.seat,
         ticketNumber,
@@ -341,7 +373,7 @@ export class MemStorage implements IStorage {
   async cancelReservation(id: string, userId: string): Promise<boolean> {
     const reservation = this.reservations.get(id);
     if (!reservation) return false;
-    if (reservation.odId !== userId) return false;
+    if (reservation.userId !== userId) return false;
     
     const match = this.matches.get(reservation.matchId);
     if (!match) return false;
@@ -358,7 +390,7 @@ export class MemStorage implements IStorage {
   }
 
   async getUserReservations(userId: string): Promise<Reservation[]> {
-    return Array.from(this.reservations.values()).filter(r => r.odId === userId);
+    return Array.from(this.reservations.values()).filter(r => r.userId === userId);
   }
 
   async getMatchReservations(matchId: string): Promise<Reservation[]> {

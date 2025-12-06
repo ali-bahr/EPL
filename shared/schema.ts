@@ -109,7 +109,7 @@ export type InsertMatch = z.infer<typeof insertMatchSchema>;
 export interface Reservation {
   id: string;
   matchId: string;
-  odId: string;
+  userId: string;
   seatRow: number;
   seatNumber: number;
   ticketNumber: string;

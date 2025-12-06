@@ -191,7 +191,7 @@ export default function MatchForm() {
                       </FormControl>
                       <SelectContent>
                         {stadiumsLoading ? (
-                          <SelectItem value="" disabled>Loading stadiums...</SelectItem>
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading stadiums...</div>
                         ) : stadiums && stadiums.length > 0 ? (
                           stadiums.map((stadium) => (
                             <SelectItem key={stadium.id} value={stadium.id}>
@@ -199,7 +199,7 @@ export default function MatchForm() {
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="" disabled>No stadiums available</SelectItem>
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">No stadiums available</div>
                         )}
                       </SelectContent>
                     </Select>

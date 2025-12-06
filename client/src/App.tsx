@@ -145,37 +145,37 @@ function Router() {
       </Route>
       
       <Route path="/manager">
-        <ProtectedRoute roles={["manager"]}>
+        <ProtectedRoute roles={["admin", "manager"]}>
           <ManagerDashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/manager/matches">
-        <ProtectedRoute roles={["manager"]}>
+        <ProtectedRoute roles={["admin", "manager"]}>
           <ManagerMatches />
         </ProtectedRoute>
       </Route>
       
       <Route path="/manager/matches/new">
-        <ProtectedRoute roles={["manager"]}>
+        <ProtectedRoute roles={["admin", "manager"]}>
           <MatchForm />
         </ProtectedRoute>
       </Route>
       
       <Route path="/manager/matches/:id/edit">
-        <ProtectedRoute roles={["manager"]}>
+        <ProtectedRoute roles={["admin", "manager"]}>
           <MatchForm />
         </ProtectedRoute>
       </Route>
       
       <Route path="/manager/stadiums">
-        <ProtectedRoute roles={["manager"]}>
+        <ProtectedRoute roles={["admin", "manager"]}>
           <ManagerStadiums />
         </ProtectedRoute>
       </Route>
       
       <Route path="/manager/stadiums/new">
-        <ProtectedRoute roles={["manager"]}>
+        <ProtectedRoute roles={["admin", "manager"]}>
           <StadiumForm />
         </ProtectedRoute>
       </Route>

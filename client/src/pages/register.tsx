@@ -63,7 +63,7 @@ export default function Register() {
       const response = await apiRequest("POST", "/api/auth/register", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (user) => {
       toast({
         title: "Registration Successful!",
         description: "Your account is pending administrator approval. You'll be able to login once approved.",
@@ -349,6 +349,8 @@ export default function Register() {
                   </FormItem>
                 )}
               />
+
+
 
               <Button
                 type="submit"

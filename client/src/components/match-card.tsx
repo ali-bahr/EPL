@@ -3,6 +3,7 @@ import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 import type { MatchWithStadium } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -13,10 +14,14 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, showReserveButton = true, onReserve }: MatchCardProps) {
+  const { user } = useAuth();
   const matchDate = new Date(match.dateTime);
   const totalSeats = match.stadium.rows * match.stadium.seatsPerRow;
   const availableSeats = totalSeats - match.reservedSeats.length;
   const isUpcoming = matchDate > new Date();
+  
+  // Only show reserve button for fans
+  const canReserve = user?.role === "fan" && user?.status === "approved";
 
   return (
     <Card className="overflow-visible" data-testid={`card-match-${match.id}`}>
@@ -89,7 +94,7 @@ export function MatchCard({ match, showReserveButton = true, onReserve }: MatchC
             View Details
           </Button>
         </Link>
-        {showReserveButton && isUpcoming && availableSeats > 0 && (
+        {showReserveButton && canReserve && isUpcoming && availableSeats > 0 && (
           <Link href={`/matches/${match.id}/reserve`} className="flex-1">
             <Button className="w-full" onClick={onReserve} data-testid={`button-reserve-${match.id}`}>
               Reserve Seats
