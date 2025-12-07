@@ -4,13 +4,16 @@ let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    const url = import.meta.env.PROD ? window.location.origin : "http://localhost:5000";
+    // Use backend URL for socket connection
+    const url = import.meta.env.VITE_API_URL || "https://golazo.runasp.net";
     socket = io(url, {
       autoConnect: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      withCredentials: true, // Important for cookies
+      transports: ['websocket', 'polling'] // Try websocket first, fallback to polling
     });
 
     socket.on("connect", () => {

@@ -1,9 +1,25 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// In development with Vite proxy, use relative URLs
+// In production or when VITE_API_URL is set, use the full URL
+const API_BASE_URL = import.meta.env.DEV && !import.meta.env.VITE_API_URL 
+  ? '' // Use relative URLs in dev (proxy will handle it)
+  : (import.meta.env.VITE_API_URL || 'https://golazo.runasp.net');
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      try {
+        errorMessage = await res.text();
+      } catch {
+        // Keep statusText if everything fails
+      }
+    }
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
@@ -12,11 +28,14 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Ensure URL uses the backend base URL
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", // Important for cookies
   });
 
   await throwIfResNotOk(res);
@@ -29,7 +48,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    // Build the full URL with API base
+    const endpoint = queryKey.join("/");
+    const fullUrl = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
     });
 

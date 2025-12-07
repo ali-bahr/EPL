@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import type { User } from "@shared/schema";
+import { authApi } from "./api";
 
 interface AuthContextType {
   user: User | null;
@@ -16,33 +17,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("epl_user");
-    if (stored) {
+    // Check if user is authenticated via cookie
+    const checkAuth = async () => {
       try {
-        setUser(JSON.parse(stored));
+        const currentUser = await authApi.getCurrentUser();
+        setUser(currentUser as User);
       } catch {
-        localStorage.removeItem("epl_user");
+        // Not authenticated or error occurred
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = (user: User) => {
     setUser(user);
-    localStorage.setItem("epl_user", JSON.stringify(user));
+    // No need to store in localStorage anymore - using cookies
   };
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await authApi.logout();
     } catch {}
     setUser(null);
-    localStorage.removeItem("epl_user");
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem("epl_user", JSON.stringify(updatedUser));
   };
 
   return (
