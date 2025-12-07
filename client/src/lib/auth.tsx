@@ -28,7 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...userData,
           role: userData.roles?.[0]?.toLowerCase() || 'fan',
           username: userData.userName,
-          status: 'approved' // Backend doesn't have status, assume approved
+          // Users with no roles are pending approval, otherwise approved
+          status: (userData.roles && userData.roles.length > 0) ? 'approved' : 'pending'
         };
         setUser(user as User);
       } catch {

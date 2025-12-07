@@ -66,24 +66,33 @@ export default function AdminUsers() {
     queryKey: ["/api/v1/AdminContorller/users"],
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/v1/AdminContorller/users");
-      return res.json();
+      const data = await res.json();
+      console.log('Users data:', data);
+      return data;
     },
+    refetchOnMount: true,
+    staleTime: 0, // Always fetch fresh data
   });
 
   const users = response?.data?.items || [];
+  console.log('Users array:', users);
 
   const approveMutation = useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiRequest("PATCH", `/api/v1/AdminContorller/confirm-account/${userId}`);
+      // 204 No Content returns empty body
+      if (response.status === 204) {
+        return { success: true, message: "User approved successfully" };
+      }
       return response.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/users"] });
-      if (data.success) {
-        toast({ title: "User approved successfully", description: data.message });
-      } else {
-        toast({ title: "Failed to approve user", description: data.message, variant: "destructive" });
-      }
+    onSuccess: async (data) => {
+      // Force immediate refetch instead of just invalidating
+      await queryClient.refetchQueries({ queryKey: ["/api/v1/AdminContorller/users"] });
+      toast({ 
+        title: "User Approved", 
+        description: data.message || "The user has been approved successfully" 
+      });
     },
     onError: (error: Error) => {
       toast({ title: "Failed to approve user", description: error.message, variant: "destructive" });
@@ -93,15 +102,19 @@ export default function AdminUsers() {
   const rejectMutation = useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiRequest("PATCH", `/api/v1/AdminContorller/reject-account/${userId}`);
+      // 204 No Content returns empty body
+      if (response.status === 204) {
+        return { success: true, message: "User rejected successfully" };
+      }
       return response.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"] });
-      if (data.success) {
-        toast({ title: "User rejected", description: data.message });
-      } else {
-        toast({ title: "Failed to reject user", description: data.message, variant: "destructive" });
-      }
+    onSuccess: async (data) => {
+      // Force immediate refetch instead of just invalidating
+      await queryClient.refetchQueries({ queryKey: ["/api/v1/AdminContorller/users"] });
+      toast({ 
+        title: "User Rejected", 
+        description: data.message || "The user has been rejected" 
+      });
     },
     onError: (error: Error) => {
       toast({ title: "Failed to reject user", description: error.message, variant: "destructive" });
@@ -111,15 +124,19 @@ export default function AdminUsers() {
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiRequest("DELETE", `/api/v1/AdminContorller/users/${userId}`);
+      // 204 No Content returns empty body
+      if (response.status === 204) {
+        return { success: true, message: "User deleted successfully" };
+      }
       return response.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"] });
-      if (data?.success !== false) {
-        toast({ title: "User deleted successfully" });
-      } else {
-        toast({ title: "Failed to delete user", description: data.message, variant: "destructive" });
-      }
+    onSuccess: async (data) => {
+      // Force immediate refetch instead of just invalidating
+      await queryClient.refetchQueries({ queryKey: ["/api/v1/AdminContorller/users"] });
+      toast({ 
+        title: "User Deleted", 
+        description: data.message || "The user has been deleted successfully" 
+      });
     },
     onError: (error: Error) => {
       toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });

@@ -5,16 +5,55 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { User } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+
+interface UsersResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    items: Array<{
+      id: string;
+      userName: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      birthDate: string;
+      city: string;
+      address: string | null;
+      gender: string;
+      roles: string[];
+    }>;
+    pageIndex: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+  };
+}
 
 export default function AdminDashboard() {
-  const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
+  const { data: response, isLoading } = useQuery<UsersResponse>({
+    queryKey: ["/api/v1/AdminContorller/users"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/v1/AdminContorller/users");
+      const data = await res.json();
+      console.log('Dashboard users data:', data);
+      return data;
+    },
+    refetchOnMount: true,
+    staleTime: 0, // Always fetch fresh data
   });
 
-  const pendingUsers = users?.filter((u) => u.status === "pending") || [];
-  const approvedUsers = users?.filter((u) => u.status === "approved") || [];
-  const managers = users?.filter((u) => u.role === "manager" && u.status === "approved") || [];
+  const users = response?.data?.items || [];
+  console.log('Dashboard - All users:', users.length);
+  const pendingUsers = users.filter((u) => u.roles.length === 0);
+  console.log('Dashboard - Pending users:', pendingUsers.length, pendingUsers);
+  const approvedUsers = users.filter((u) => u.roles.length > 0);
+  console.log('Dashboard - Approved users:', approvedUsers.length);
+  const managers = users.filter((u) => u.roles.includes("manager"));
+  console.log('Dashboard - Managers:', managers.length);
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -35,7 +74,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold" data-testid="stat-total-users">
-              {isLoading ? "-" : users?.length || 0}
+              {isLoading ? "-" : response?.data?.totalCount || 0}
             </div>
             <p className="text-xs text-muted-foreground">Registered accounts</p>
           </CardContent>
@@ -122,8 +161,8 @@ export default function AdminDashboard() {
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
-                    <Badge variant={user.role === "manager" ? "default" : "secondary"}>
-                      {user.role === "manager" ? "Manager" : "Fan"}
+                    <Badge variant={user.roles.includes("manager") ? "default" : "secondary"}>
+                      {user.roles.length > 0 ? (user.roles.includes("manager") ? "Manager" : "Fan") : "Pending"}
                     </Badge>
                   </div>
                 ))}
