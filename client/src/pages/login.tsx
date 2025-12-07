@@ -22,14 +22,14 @@ export default function Login() {
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginInput) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
+      const response = await apiRequest("POST", "/Auth/login", data);
       return response.json();
     },
     onSuccess: (user) => {
@@ -51,15 +51,45 @@ export default function Login() {
       }
     },
     onError: (error: Error) => {
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid username or password",
-        variant: "destructive",
-      });
+      try {
+        const errorData = JSON.parse(error.message);
+        
+        // Check if email is not verified
+        if (errorData.statusCode === 400 && errorData.message?.includes("email is not verified")) {
+          toast({
+            title: "Email Not Verified",
+            description: "Please verify your email to continue.",
+          });
+          // Navigate to confirm email page with email in state
+          window.history.pushState(
+            { usr: { email: form.getValues("email") } },
+            "",
+            "/confirm-email"
+          );
+          setLocation("/confirm-email");
+          return;
+        }
+        
+        // Handle other error messages from server
+        const errorMessage = errorData.message || error.message || "Invalid username or password";
+        toast({
+          title: "Login Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } catch {
+        // If error is not JSON, use default message
+        toast({
+          title: "Login Failed",
+          description: error.message || "Invalid username or password",
+          variant: "destructive",
+        });
+      }
     },
   });
 
   const onSubmit = (data: LoginInput) => {
+    console.log("Try to login")
     loginMutation.mutate(data);
   };
 
@@ -80,10 +110,10 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter your username"
@@ -156,6 +186,11 @@ export default function Login() {
               Sign up
             </Link>
           </p>
+          <Link href="/confirm-email" className="w-full" data-testid="link-confirm-email">
+            <Button type="button" variant="outline" className="w-full">
+              Verify Email
+            </Button>
+          </Link>
         </CardFooter>
       </Card>
     </div>

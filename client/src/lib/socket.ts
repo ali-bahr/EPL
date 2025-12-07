@@ -1,10 +1,11 @@
 import { io, Socket } from "socket.io-client";
+import { getSocketUrl } from "@/config/api";
 
 let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    const url = import.meta.env.PROD ? window.location.origin : "http://localhost:5000";
+    const url = getSocketUrl();
     socket = io(url, {
       autoConnect: true,
       reconnection: true,

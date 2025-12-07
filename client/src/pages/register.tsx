@@ -45,12 +45,13 @@ export default function Register() {
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: "",
+      userName: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
       birthDate: "",
-      gender: "male",
+      gender: "Male",
       city: "",
       address: "",
       email: "",
@@ -60,7 +61,8 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      const response = await apiRequest("POST", "/api/auth/register", data);
+      const endpoint = data.role === "fan" ? "/Auth/signup-fan" : "/Auth/signup-manager";
+      const response = await apiRequest("POST", endpoint, data);
       return response.json();
     },
     onSuccess: (user) => {
@@ -71,9 +73,32 @@ export default function Register() {
       setLocation("/login");
     },
     onError: (error: Error) => {
+      // Handle server validation errors
+      let errorMessage = error.message || "Something went wrong";
+      
+      try {
+        const errorData = JSON.parse(error.message);
+        if (errorData.errors) {
+          // Extract field-specific errors from server response
+          Object.entries(errorData.errors).forEach(([field, messages]: [string, any]) => {
+            const fieldKey = field.charAt(0).toLowerCase() + field.slice(1);
+            if (Array.isArray(messages)) {
+              messages.forEach((msg: string) => {
+                form.setError(fieldKey as any, {
+                  message: msg,
+                });
+              });
+            }
+          });
+          errorMessage = "Please check the form for errors";
+        }
+      } catch {
+        // If error message is not JSON, use it as is
+      }
+      
       toast({
         title: "Registration Failed",
-        description: error.message || "Something went wrong",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -138,7 +163,7 @@ export default function Register() {
 
               <FormField
                 control={form.control}
-                name="username"
+                name="userName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Username *</FormLabel>
@@ -183,8 +208,42 @@ export default function Register() {
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Min. 6 characters"
+                          placeholder="Min. 8 chars: uppercase, lowercase, digit, special char"
                           data-testid="input-password"
+                          {...field}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Confirm your password"
+                          data-testid="input-confirm-password"
                           {...field}
                         />
                         <Button
@@ -239,11 +298,11 @@ export default function Register() {
                           className="flex gap-4 h-9 items-center"
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="male" id="male" data-testid="radio-male" />
+                            <RadioGroupItem value="Male" id="male" data-testid="radio-male" />
                             <label htmlFor="male" className="text-sm cursor-pointer">Male</label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="female" id="female" data-testid="radio-female" />
+                            <RadioGroupItem value="Female" id="female" data-testid="radio-female" />
                             <label htmlFor="female" className="text-sm cursor-pointer">Female</label>
                           </div>
                         </RadioGroup>

@@ -10,6 +10,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ConfirmEmail from "@/pages/confirm-email";
 import Matches from "@/pages/matches";
 import MatchDetails from "@/pages/match-details";
 import MatchReserve from "@/pages/match-reserve";
@@ -110,6 +111,8 @@ function Router() {
           <Register />
         </GuestRoute>
       </Route>
+      
+      <Route path="/confirm-email" component={ConfirmEmail} />
       
       <Route path="/matches" component={Matches} />
       <Route path="/matches/:id" component={MatchDetails} />
