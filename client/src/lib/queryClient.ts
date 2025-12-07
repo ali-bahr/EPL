@@ -15,11 +15,18 @@ export async function apiRequest(
 ): Promise<Response> {
   const fullUrl = getApiUrl(url);
   console.log("request to: ", fullUrl)
+  
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  };
+  
   const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", // Include cookies in requests to send authentication
+    mode: "cors", // Enable CORS
   });
 
   await throwIfResNotOk(res);
@@ -35,7 +42,13 @@ export const getQueryFn: <T>(options: {
     const endpoint = queryKey.join("/");
     const fullUrl = getApiUrl(endpoint);
     const res = await fetch(fullUrl, {
-      credentials: "include",
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      credentials: "include", // Include cookies in requests to send authentication
+      mode: "cors", // Enable CORS
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

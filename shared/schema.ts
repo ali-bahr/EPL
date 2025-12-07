@@ -40,6 +40,7 @@ export interface User {
   address?: string;
   email: string;
   role: UserRole;
+  roles?: string[];
   status: UserStatus;
 }
 
@@ -147,10 +148,9 @@ export const updateUserSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   birthDate: z.string().min(1, "Birth date is required"),
-  gender: z.enum(["male", "female"]),
+  gender: z.enum(["Male", "Female"]),
   city: z.string().min(1, "City is required"),
   address: z.string().optional(),
-  password: z.string().optional(),
 });
 
 export type UpdateUser = z.infer<typeof updateUserSchema>;

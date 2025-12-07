@@ -33,21 +33,21 @@ export default function Login() {
       return response.json();
     },
     onSuccess: (user) => {
-      login(user);
+      const account = user.data;
+      console.log("Login successful: ", account);
+      login(account);
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${user.firstName} ${user.lastName}`,
+        description: `Logged in as ${account.firstName} ${account.lastName}`,
       });
       
-      switch (user.role) {
-        case "admin":
-          setLocation("/admin");
-          break;
-        case "manager":
-          setLocation("/manager");
-          break;
-        default:
-          setLocation("/dashboard");
+      // Check roles array to determine navigation
+      if (account.roles?.includes("Admin")) {
+        setLocation("/admin");
+      } else if (account.roles?.includes("Manager")) {
+        setLocation("/manager");
+      } else {
+        setLocation("/dashboard");
       }
     },
     onError: (error: Error) => {

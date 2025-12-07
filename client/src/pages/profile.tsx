@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Eye, EyeOff, Loader2, Save, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Save, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -22,35 +22,55 @@ const EGYPTIAN_CITIES = [
 ];
 
 export default function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user: localUser, updateUser } = useAuth();
   const { toast } = useToast();
-  const [showPassword, setShowPassword] = useState(false);
+  
+  console.log("User: ", localUser)
+
+  // Fetch user data from server
+  const { data: user, isLoading, refetch } = useQuery({
+    queryKey: ["/User"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/User");
+      return response.json();
+    },
+    enabled: !!localUser,
+  });
 
   const form = useForm<UpdateUser>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      birthDate: user?.birthDate || "",
-      gender: user?.gender || "male",
-      city: user?.city || "",
-      address: user?.address || "",
-      password: "",
+      firstName: "",
+      lastName: "",
+      birthDate: "",
+      gender: "Male",
+      city: "",
+      address: "",
     },
   });
 
+  // Update form when user data is loaded
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        birthDate: user.birthDate || "",
+        gender: user.gender || "Male",
+        city: user.city || "",
+        address: user.address || "",
+      });
+    }
+  }, [user, form]);
+
   const updateMutation = useMutation({
     mutationFn: async (data: UpdateUser) => {
-      const payload = { ...data };
-      if (!payload.password) {
-        delete payload.password;
-      }
-      const response = await apiRequest("PATCH", "/api/auth/me", payload);
+      const response = await apiRequest("PUT", "/User", data);
       return response.json();
     },
     onSuccess: (data) => {
-      updateUser({ ...user!, ...data });
-      form.setValue("password", "");
+      updateUser({ ...localUser!, ...data });
+      refetch();
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
@@ -69,8 +89,12 @@ export default function Profile() {
     updateMutation.mutate(data);
   };
 
-  if (!user) {
-    return null;
+  if (isLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
@@ -186,11 +210,11 @@ export default function Profile() {
                             className="flex gap-4 h-9 items-center"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="male" id="male" data-testid="radio-male" />
+                              <RadioGroupItem value="Male" id="male" data-testid="radio-male" />
                               <label htmlFor="male" className="text-sm cursor-pointer">Male</label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="female" id="female" data-testid="radio-female" />
+                              <RadioGroupItem value="Female" id="female" data-testid="radio-female" />
                               <label htmlFor="female" className="text-sm cursor-pointer">Female</label>
                             </div>
                           </RadioGroup>
@@ -243,46 +267,6 @@ export default function Profile() {
                     </FormItem>
                   )}
                 />
-
-                <div className="border-t pt-6">
-                  <h3 className="font-medium mb-4">Change Password</h3>
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Leave blank to keep current password"
-                              data-testid="input-password"
-                              {...field}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0 h-full px-3"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Only fill this if you want to change your password
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 <Button
                   type="submit"

@@ -24,14 +24,16 @@ import StadiumForm from "@/pages/manager/stadium-form";
 import CustomerDashboard from "@/pages/customer/dashboard";
 import Profile from "@/pages/profile";
 
-function ProtectedRoute({ 
-  children, 
-  roles 
-}: { 
-  children: React.ReactNode; 
-  roles?: string[]; 
+function ProtectedRoute({
+  children,
+  roles
+}: {
+  children: React.ReactNode;
+  roles?: string[];
 }) {
   const { user, isLoading } = useAuth();
+
+  console.log("User: ", user, user?.status)
   const [, setLocation] = useLocation();
 
   if (isLoading) {
@@ -47,7 +49,7 @@ function ProtectedRoute({
     return null;
   }
 
-  if (user.status !== "approved") {
+  if (user.status !== undefined && user.status !== "approved") {
     return (
       <div className="container px-4 py-8 mx-auto text-center">
         <h1 className="text-2xl font-bold mb-4">Account Not Approved</h1>
@@ -58,7 +60,7 @@ function ProtectedRoute({
     );
   }
 
-  if (roles && !roles.includes(user.role)) {
+  if (roles && !(user.roles?.some(role => roles.includes(role)))) {
     setLocation("/");
     return null;
   }
@@ -77,17 +79,16 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+    console.log("Logged User: ", user)
 
   if (user) {
-    switch (user.role) {
-      case "admin":
-        setLocation("/admin");
-        break;
-      case "manager":
-        setLocation("/manager");
-        break;
-      default:
-        setLocation("/dashboard");
+    // Check roles array to determine navigation
+    if (user.roles?.includes("Admin")) {
+      setLocation("/admin");
+    } else if (user.roles?.includes("Manager")) {
+      setLocation("/manager");
+    } else {
+      setLocation("/dashboard");
     }
     return null;
   }
@@ -99,90 +100,90 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      
+
       <Route path="/login">
         <GuestRoute>
           <Login />
         </GuestRoute>
       </Route>
-      
+
       <Route path="/register">
         <GuestRoute>
           <Register />
         </GuestRoute>
       </Route>
-      
+
       <Route path="/confirm-email" component={ConfirmEmail} />
-      
+
       <Route path="/matches" component={Matches} />
       <Route path="/matches/:id" component={MatchDetails} />
-      
+
       <Route path="/matches/:id/reserve">
         <ProtectedRoute roles={["fan"]}>
           <MatchReserve />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/dashboard">
         <ProtectedRoute roles={["fan"]}>
           <CustomerDashboard />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/profile">
         <ProtectedRoute>
           <Profile />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/admin">
         <ProtectedRoute roles={["admin"]}>
           <AdminDashboard />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/admin/users">
         <ProtectedRoute roles={["admin"]}>
           <AdminUsers />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/manager">
         <ProtectedRoute roles={["admin", "manager"]}>
           <ManagerDashboard />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/manager/matches">
         <ProtectedRoute roles={["admin", "manager"]}>
           <ManagerMatches />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/manager/matches/new">
         <ProtectedRoute roles={["admin", "manager"]}>
           <MatchForm />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/manager/matches/:id/edit">
         <ProtectedRoute roles={["admin", "manager"]}>
           <MatchForm />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/manager/stadiums">
         <ProtectedRoute roles={["admin", "manager"]}>
           <ManagerStadiums />
         </ProtectedRoute>
       </Route>
-      
+
       <Route path="/manager/stadiums/new">
         <ProtectedRoute roles={["admin", "manager"]}>
           <StadiumForm />
         </ProtectedRoute>
       </Route>
-      
+
       <Route component={NotFound} />
     </Switch>
   );

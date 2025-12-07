@@ -33,17 +33,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'https://golazo.runasp.net/api/v1/',
-        changeOrigin: true,
-      },
-      '/socket.io': {
-        target: 'https://golazo.runasp.net/api/v1/',
-        changeOrigin: true,
-        ws: true,
-      },
-    },
     fs: {
       strict: true,
       deny: ["**/.*"],

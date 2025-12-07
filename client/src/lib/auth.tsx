@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import type { User } from "@shared/schema";
-import { getApiUrl } from "@/config/api";
+import { apiRequest } from "@/lib/queryClient";
 
 interface AuthContextType {
   user: User | null;
@@ -35,11 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      const logoutUrl = getApiUrl("/api/auth/logout");
-      await fetch(logoutUrl, { 
-        method: "POST",
-        credentials: "include"
-      });
+      await apiRequest("POST", "/Auth/logout", undefined);
     } catch {}
     setUser(null);
     localStorage.removeItem("epl_user");
