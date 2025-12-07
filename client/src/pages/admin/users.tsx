@@ -36,7 +36,7 @@ export default function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
 
-  interface UnconfirmedAccountsResponse {
+  interface UsersResponse {
     success: boolean;
     statusCode: number;
     message: string;
@@ -62,10 +62,10 @@ export default function AdminUsers() {
     };
   }
 
-  const { data: response, isLoading } = useQuery<UnconfirmedAccountsResponse>({
-    queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"],
+  const { data: response, isLoading } = useQuery<UsersResponse>({
+    queryKey: ["/api/v1/AdminContorller/users"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/v1/AdminContorller/unconfirmed-accounts");
+      const res = await apiRequest("GET", "/api/v1/AdminContorller/users");
       return res.json();
     },
   });
@@ -78,7 +78,7 @@ export default function AdminUsers() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/users"] });
       if (data.success) {
         toast({ title: "User approved successfully", description: data.message });
       } else {
@@ -110,7 +110,7 @@ export default function AdminUsers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiRequest("DELETE", `/api/v1/AdminContorller/delete-account/${userId}`);
+      const response = await apiRequest("DELETE", `/api/v1/AdminContorller/users/${userId}`);
       return response.json();
     },
     onSuccess: (data) => {
@@ -133,24 +133,22 @@ export default function AdminUsers() {
       user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRole = roleFilter === "all" || (user.roles.length > 0 && user.roles.includes(roleFilter));
-    // All unconfirmed accounts are pending by default
-    const matchesStatus = statusFilter === "all" || statusFilter === "pending";
+    // Check if user has the specified role
+    const userRole = user.roles.length > 0 ? user.roles[0] : "fan";
+    const matchesRole = roleFilter === "all" || userRole === roleFilter;
+    
+    // Users with no roles are unconfirmed/pending
+    const userStatus = user.roles.length === 0 ? "pending" : "approved";
+    const matchesStatus = statusFilter === "all" || userStatus === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <Badge variant="default">Approved</Badge>;
-      case "pending":
-        return <Badge variant="secondary" className="bg-chart-2/20 text-chart-2 border-chart-2/30">Pending</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const getStatusBadge = (roles: string[]) => {
+    if (roles.length === 0) {
+      return <Badge variant="secondary" className="bg-chart-2/20 text-chart-2 border-chart-2/30">Pending</Badge>;
     }
+    return <Badge variant="default">Approved</Badge>;
   };
 
   const getRoleBadge = (roles: string[]) => {
@@ -255,11 +253,12 @@ export default function AdminUsers() {
                       <TableCell className="text-muted-foreground">{user.userName}</TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
                       <TableCell>{getRoleBadge(user.roles)}</TableCell>
-                      <TableCell>{getStatusBadge("pending")}</TableCell>
+                      <TableCell>{getStatusBadge(user.roles)}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          {/* All unconfirmed accounts should have approve/reject options */}
-                          <>
+                          {/* Only show approve/reject for unconfirmed accounts (no roles) */}
+                          {user.roles.length === 0 && (
+                            <>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -278,7 +277,8 @@ export default function AdminUsers() {
                               >
                                 <UserX className="h-4 w-4 text-destructive" />
                               </Button>
-                          </>
+                            </>
+                          )}
                           {/* Allow deletion for non-admin users */}
                           {!user.roles.includes("admin") && (
                             <AlertDialog>
