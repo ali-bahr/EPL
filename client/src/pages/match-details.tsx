@@ -14,7 +14,7 @@ export default function MatchDetails() {
   const { user } = useAuth();
 
   const { data: match, isLoading } = useQuery<MatchWithStadium>({
-    queryKey: ["/api/matches", id],
+    queryKey: ["/api/v1/Match", id],
   });
 
   if (isLoading) {

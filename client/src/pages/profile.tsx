@@ -45,7 +45,7 @@ export default function Profile() {
       if (!payload.password) {
         delete payload.password;
       }
-      const response = await apiRequest("PATCH", "/api/auth/me", payload);
+      const response = await apiRequest("PATCH", "/api/v1/Auth/me", payload);
       return response.json();
     },
     onSuccess: (data) => {

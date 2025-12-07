@@ -22,17 +22,18 @@ export default function Login() {
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginInput) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
+      const response = await apiRequest("POST", "/api/v1/Auth/login", data);
       return response.json();
     },
     onSuccess: (user) => {
+      console.log("Login response user:", user);
       login(user);
       toast({
         title: "Welcome back!",
@@ -80,14 +81,15 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your username"
-                        data-testid="input-username"
+                        type="email"
+                        placeholder="Enter your email"
+                        data-testid="input-email"
                         {...field}
                       />
                     </FormControl>

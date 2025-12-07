@@ -45,7 +45,7 @@ export default function MatchReserve() {
   const [reservedSeats, setReservedSeats] = useState<Array<{ row: number; seat: number }>>([]);
 
   const { data: match, isLoading } = useQuery<MatchWithStadium>({
-    queryKey: ["/api/matches", id],
+    queryKey: ["/api/v1/Match", id],
   });
 
   // Setup Socket.IO for real-time seat updates
@@ -99,7 +99,7 @@ export default function MatchReserve() {
 
   const reserveMutation = useMutation({
     mutationFn: async (data: PaymentForm) => {
-      const response = await apiRequest("POST", "/api/reservations", {
+      const response = await apiRequest("POST", "/api/v1/Reservation", {
         matchId: id,
         seats: selectedSeats,
         ...data,
@@ -109,9 +109,9 @@ export default function MatchReserve() {
     onSuccess: (data) => {
       setTicketNumbers(data.reservations.map((r) => r.ticketNumber));
       setStep("confirmation");
-      queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/matches", id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Match"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Match", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Reservation"] });
     },
     onError: (error: Error) => {
       toast({

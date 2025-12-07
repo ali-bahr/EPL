@@ -30,17 +30,17 @@ export default function CustomerDashboard() {
   const { toast } = useToast();
 
   const { data: reservations, isLoading } = useQuery<ReservationWithMatch[]>({
-    queryKey: ["/api/reservations"],
+    queryKey: ["/api/v1/Reservation"],
   });
 
   const cancelMutation = useMutation({
     mutationFn: async (reservationId: string) => {
-      const response = await apiRequest("DELETE", `/api/reservations/${reservationId}`);
+      const response = await apiRequest("DELETE", `/api/v1/Reservation/${reservationId}`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reservations"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Reservation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Match"] });
       toast({ title: "Reservation cancelled successfully" });
     },
     onError: (error: Error) => {

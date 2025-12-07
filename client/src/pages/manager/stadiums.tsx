@@ -23,16 +23,16 @@ export default function ManagerStadiums() {
   const { toast } = useToast();
 
   const { data: stadiums, isLoading } = useQuery<Stadium[]>({
-    queryKey: ["/api/stadiums"],
+    queryKey: ["/api/v1/Stadium"],
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (stadiumId: string) => {
-      const response = await apiRequest("DELETE", `/api/stadiums/${stadiumId}`);
+      const response = await apiRequest("DELETE", `/api/v1/Stadium/${stadiumId}`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stadiums"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Stadium"] });
       toast({ title: "Stadium deleted successfully" });
     },
     onError: (error: Error) => {

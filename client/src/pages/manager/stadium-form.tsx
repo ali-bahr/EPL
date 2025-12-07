@@ -31,11 +31,11 @@ export default function StadiumForm() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: InsertStadium) => {
-      const response = await apiRequest("POST", "/api/stadiums", data);
+      const response = await apiRequest("POST", "/api/v1/Stadium", data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stadiums"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Stadium"] });
       toast({
         title: "Stadium Created",
         description: "The new stadium has been added successfully.",

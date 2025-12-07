@@ -15,7 +15,7 @@ export default function Matches() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: matches, isLoading } = useQuery<MatchWithStadium[]>({
-    queryKey: ["/api/matches"],
+    queryKey: ["/api/v1/Match"],
   });
 
   const filteredMatches = matches?.filter((match) => {

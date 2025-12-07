@@ -9,11 +9,11 @@ import { format } from "date-fns";
 
 export default function ManagerDashboard() {
   const { data: matches, isLoading: matchesLoading } = useQuery<MatchWithStadium[]>({
-    queryKey: ["/api/matches"],
+    queryKey: ["/api/v1/Match"],
   });
 
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({
-    queryKey: ["/api/stadiums"],
+    queryKey: ["/api/v1/Stadium"],
   });
 
   const upcomingMatches = matches?.filter((m) => new Date(m.dateTime) > new Date()) || [];

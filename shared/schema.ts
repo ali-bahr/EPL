@@ -40,7 +40,7 @@ export interface User {
   address?: string;
   email: string;
   role: UserRole;
-  status: UserStatus;
+  status?: UserStatus; // Optional - backend might not have this field
 }
 
 export const insertUserSchema = z.object({
@@ -59,7 +59,7 @@ export const insertUserSchema = z.object({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 

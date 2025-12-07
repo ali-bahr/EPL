@@ -22,15 +22,22 @@ class ApiClient {
       let errorMessage = response.statusText;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
+        errorMessage = errorData.message || errorData.error || errorData.title || errorMessage;
       } catch {
         // If parsing fails, use text response
         try {
-          errorMessage = await response.text();
+          const textError = await response.text();
+          if (textError) errorMessage = textError;
         } catch {
           // Keep statusText if everything fails
         }
       }
+      
+      console.error('API Error:', {
+        status: response.status,
+        message: errorMessage,
+        url: response.url
+      });
       
       const error: ApiError = {
         message: errorMessage,
@@ -63,6 +70,8 @@ class ApiClient {
       credentials: 'include', // Important for cookies
     };
 
+    console.log('API Request:', options.method || 'GET', url);
+    
     const response = await fetch(url, config);
     return this.handleResponse<T>(response);
   }
@@ -104,39 +113,39 @@ export const apiClient = new ApiClient(API_BASE_URL);
 
 // API Service Functions
 export const authApi = {
-  register: (data: unknown) => apiClient.post('/api/auth/register', data),
-  login: (data: unknown) => apiClient.post('/api/auth/login', data),
-  logout: () => apiClient.post('/api/auth/logout'),
-  getCurrentUser: () => apiClient.get('/api/auth/me'),
-  updateProfile: (data: unknown) => apiClient.patch('/api/auth/me', data),
+  register: (data: unknown) => apiClient.post('/api/v1/Auth/register', data),
+  login: (data: unknown) => apiClient.post('/api/v1/Auth/login', data),
+  logout: () => apiClient.post('/api/v1/Auth/logout'),
+  getCurrentUser: () => apiClient.get('/api/v1/Auth/me'),
+  updateProfile: (data: unknown) => apiClient.patch('/api/v1/Auth/me', data),
 };
 
 export const matchApi = {
-  getAll: () => apiClient.get('/api/matches'),
-  getById: (id: string | number) => apiClient.get(`/api/matches/${id}`),
-  create: (data: unknown) => apiClient.post('/api/matches', data),
-  update: (id: string | number, data: unknown) => apiClient.patch(`/api/matches/${id}`, data),
-  delete: (id: string | number) => apiClient.delete(`/api/matches/${id}`),
+  getAll: () => apiClient.get('/api/v1/Match'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/Match/${id}`),
+  create: (data: unknown) => apiClient.post('/api/v1/Match', data),
+  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Match/${id}`, data),
+  delete: (id: string | number) => apiClient.delete(`/api/v1/Match/${id}`),
 };
 
 export const stadiumApi = {
-  getAll: () => apiClient.get('/api/stadiums'),
-  getById: (id: string | number) => apiClient.get(`/api/stadiums/${id}`),
-  create: (data: unknown) => apiClient.post('/api/stadiums', data),
-  update: (id: string | number, data: unknown) => apiClient.patch(`/api/stadiums/${id}`, data),
-  delete: (id: string | number) => apiClient.delete(`/api/stadiums/${id}`),
+  getAll: () => apiClient.get('/api/v1/Stadium'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/Stadium/${id}`),
+  create: (data: unknown) => apiClient.post('/api/v1/Stadium', data),
+  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Stadium/${id}`, data),
+  delete: (id: string | number) => apiClient.delete(`/api/v1/Stadium/${id}`),
 };
 
 export const reservationApi = {
-  getAll: () => apiClient.get('/api/reservations'),
-  getById: (id: string | number) => apiClient.get(`/api/reservations/${id}`),
-  create: (data: unknown) => apiClient.post('/api/reservations', data),
-  cancel: (id: string | number) => apiClient.delete(`/api/reservations/${id}`),
+  getAll: () => apiClient.get('/api/v1/Reservation'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/Reservation/${id}`),
+  create: (data: unknown) => apiClient.post('/api/v1/Reservation', data),
+  cancel: (id: string | number) => apiClient.delete(`/api/v1/Reservation/${id}`),
 };
 
 export const userApi = {
-  getAll: () => apiClient.get('/api/users'),
-  getById: (id: string | number) => apiClient.get(`/api/users/${id}`),
-  update: (id: string | number, data: unknown) => apiClient.patch(`/api/users/${id}`, data),
-  delete: (id: string | number) => apiClient.delete(`/api/users/${id}`),
+  getAll: () => apiClient.get('/api/v1/User'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/User/${id}`),
+  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/User/${id}`, data),
+  delete: (id: string | number) => apiClient.delete(`/api/v1/User/${id}`),
 };

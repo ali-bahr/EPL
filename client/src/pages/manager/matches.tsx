@@ -38,16 +38,16 @@ export default function ManagerMatches() {
   const { toast } = useToast();
 
   const { data: matches, isLoading } = useQuery<MatchWithStadium[]>({
-    queryKey: ["/api/matches"],
+    queryKey: ["/api/v1/Match"],
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (matchId: string) => {
-      const response = await apiRequest("DELETE", `/api/matches/${matchId}`);
+      const response = await apiRequest("DELETE", `/api/v1/Match/${matchId}`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Match"] });
       toast({ title: "Match deleted successfully" });
     },
     onError: (error: Error) => {

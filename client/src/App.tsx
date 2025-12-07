@@ -46,7 +46,9 @@ function ProtectedRoute({
     return null;
   }
 
-  if (user.status !== "approved") {
+  // Check if user status field exists and is not approved
+  // Backend might not have a status field, or it might be named differently
+  if (user.status && user.status !== "approved") {
     return (
       <div className="container px-4 py-8 mx-auto text-center">
         <h1 className="text-2xl font-bold mb-4">Account Not Approved</h1>
