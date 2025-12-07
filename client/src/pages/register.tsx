@@ -45,12 +45,13 @@ export default function Register() {
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: "",
+      userName: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
       birthDate: "",
-      gender: "male",
+      gender: "Male",
       city: "",
       address: "",
       email: "",
@@ -60,8 +61,18 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      const response = await apiRequest("POST", "/api/v1/Auth/register", data);
-      return response.json();
+      // Determine endpoint based on role
+      const endpoint = data.role === "manager" 
+        ? "/api/v1/Auth/signup-manager" 
+        : "/api/v1/Auth/signup-fan";
+      
+      // Remove role from data as backend doesn't expect it
+      const { role, ...registerData } = data;
+      
+      const response = await apiRequest("POST", endpoint, registerData);
+      const result = await response.json();
+      // Backend returns user data directly (no wrapper)
+      return result;
     },
     onSuccess: (user) => {
       toast({
@@ -138,7 +149,7 @@ export default function Register() {
 
               <FormField
                 control={form.control}
-                name="username"
+                name="userName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Username *</FormLabel>
@@ -207,6 +218,27 @@ export default function Register() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Confirm your password"
+                          data-testid="input-confirm-password"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -239,11 +271,11 @@ export default function Register() {
                           className="flex gap-4 h-9 items-center"
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="male" id="male" data-testid="radio-male" />
+                            <RadioGroupItem value="Male" id="male" data-testid="radio-male" />
                             <label htmlFor="male" className="text-sm cursor-pointer">Male</label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="female" id="female" data-testid="radio-female" />
+                            <RadioGroupItem value="Female" id="female" data-testid="radio-female" />
                             <label htmlFor="female" className="text-sm cursor-pointer">Female</label>
                           </div>
                         </RadioGroup>
@@ -349,8 +381,6 @@ export default function Register() {
                   </FormItem>
                 )}
               />
-
-
 
               <Button
                 type="submit"

@@ -20,8 +20,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is authenticated via cookie
     const checkAuth = async () => {
       try {
-        const currentUser = await authApi.getCurrentUser();
-        setUser(currentUser as User);
+        const response: any = await authApi.getCurrentUser();
+        // Backend might wrap response in { data: {...} }
+        const userData = response.data || response;
+        // Map backend response to our User type
+        const user = {
+          ...userData,
+          role: userData.roles?.[0]?.toLowerCase() || 'fan',
+          username: userData.userName,
+          status: 'approved' // Backend doesn't have status, assume approved
+        };
+        setUser(user as User);
       } catch {
         // Not authenticated or error occurred
         setUser(null);

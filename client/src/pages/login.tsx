@@ -30,17 +30,28 @@ export default function Login() {
   const loginMutation = useMutation({
     mutationFn: async (data: LoginInput) => {
       const response = await apiRequest("POST", "/api/v1/Auth/login", data);
-      return response.json();
+      const result = await response.json();
+      // Backend wraps response in { data: {...} }
+      return result.data || result;
     },
-    onSuccess: (user) => {
-      console.log("Login response user:", user);
+    onSuccess: (userData) => {
+      console.log("Login response user:", userData);
+      // Map backend response to our User type
+      const user = {
+        ...userData,
+        role: userData.roles?.[0]?.toLowerCase() || 'fan',
+        username: userData.userName,
+        status: 'approved' // Backend doesn't have status, assume approved if login succeeds
+      };
       login(user);
       toast({
         title: "Welcome back!",
         description: `Logged in as ${user.firstName} ${user.lastName}`,
       });
       
-      switch (user.role) {
+      // Use the mapped role for navigation
+      const userRole = user.role || 'fan';
+      switch (userRole) {
         case "admin":
           setLocation("/admin");
           break;

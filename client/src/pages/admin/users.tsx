@@ -36,18 +36,54 @@ export default function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
 
-  const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
+  interface UnconfirmedAccountsResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: {
+      items: Array<{
+        id: string;
+        userName: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        birthDate: string;
+        city: string;
+        address: string | null;
+        gender: string;
+        roles: string[];
+      }>;
+      pageIndex: number;
+      pageSize: number;
+      totalCount: number;
+      totalPages: number;
+      hasPreviousPage: boolean;
+      hasNextPage: boolean;
+    };
+  }
+
+  const { data: response, isLoading } = useQuery<UnconfirmedAccountsResponse>({
+    queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/v1/AdminContorller/unconfirmed-accounts");
+      return res.json();
+    },
   });
+
+  const users = response?.data?.items || [];
 
   const approveMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiRequest("POST", `/api/admin/users/${userId}/approve`);
+      const response = await apiRequest("PATCH", `/api/v1/AdminContorller/confirm-account/${userId}`);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "User approved successfully" });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"] });
+      if (data.success) {
+        toast({ title: "User approved successfully", description: data.message });
+      } else {
+        toast({ title: "Failed to approve user", description: data.message, variant: "destructive" });
+      }
     },
     onError: (error: Error) => {
       toast({ title: "Failed to approve user", description: error.message, variant: "destructive" });
@@ -56,12 +92,16 @@ export default function AdminUsers() {
 
   const rejectMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiRequest("POST", `/api/admin/users/${userId}/reject`);
+      const response = await apiRequest("PATCH", `/api/v1/AdminContorller/reject-account/${userId}`);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "User rejected" });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"] });
+      if (data.success) {
+        toast({ title: "User rejected", description: data.message });
+      } else {
+        toast({ title: "Failed to reject user", description: data.message, variant: "destructive" });
+      }
     },
     onError: (error: Error) => {
       toast({ title: "Failed to reject user", description: error.message, variant: "destructive" });
@@ -70,12 +110,16 @@ export default function AdminUsers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiRequest("DELETE", `/api/admin/users/${userId}`);
+      const response = await apiRequest("DELETE", `/api/v1/AdminContorller/delete-account/${userId}`);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "User deleted successfully" });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/AdminContorller/unconfirmed-accounts"] });
+      if (data?.success !== false) {
+        toast({ title: "User deleted successfully" });
+      } else {
+        toast({ title: "Failed to delete user", description: data.message, variant: "destructive" });
+      }
     },
     onError: (error: Error) => {
       toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });
@@ -84,13 +128,14 @@ export default function AdminUsers() {
 
   const filteredUsers = users?.filter((user) => {
     const matchesSearch =
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesRole = roleFilter === "all" || (user.roles.length > 0 && user.roles.includes(roleFilter));
+    // All unconfirmed accounts are pending by default
+    const matchesStatus = statusFilter === "all" || statusFilter === "pending";
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -108,7 +153,11 @@ export default function AdminUsers() {
     }
   };
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (roles: string[]) => {
+    if (roles.length === 0) {
+      return <Badge variant="secondary">Unconfirmed</Badge>;
+    }
+    const role = roles[0];
     switch (role) {
       case "admin":
         return <Badge variant="destructive">Admin</Badge>;
@@ -203,14 +252,14 @@ export default function AdminUsers() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{user.username}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.userName}</TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell>{getStatusBadge(user.status)}</TableCell>
+                      <TableCell>{getRoleBadge(user.roles)}</TableCell>
+                      <TableCell>{getStatusBadge("pending")}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          {user.status === "pending" && (
-                            <>
+                          {/* All unconfirmed accounts should have approve/reject options */}
+                          <>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -229,9 +278,9 @@ export default function AdminUsers() {
                               >
                                 <UserX className="h-4 w-4 text-destructive" />
                               </Button>
-                            </>
-                          )}
-                          {user.role !== "admin" && (
+                          </>
+                          {/* Allow deletion for non-admin users */}
+                          {!user.roles.includes("admin") && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button

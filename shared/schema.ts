@@ -30,30 +30,36 @@ export type SeatStatus = "available" | "reserved";
 
 export interface User {
   id: string;
-  username: string;
-  password: string;
+  userName: string; // Backend uses userName, not username
+  username?: string; // Keep for backward compatibility
+  password?: string; // Not returned by backend
   firstName: string;
   lastName: string;
   birthDate: string;
-  gender: Gender;
+  gender: string; // Backend returns "Male"/"Female" strings
   city: string;
-  address?: string;
+  address?: string | null;
   email: string;
-  role: UserRole;
-  status?: UserStatus; // Optional - backend might not have this field
+  roles?: string[]; // Backend returns roles array
+  role?: UserRole; // Keep for backward compatibility
+  status?: UserStatus; // Optional - backend might not have this
 }
 
 export const insertUserSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  userName: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   birthDate: z.string().min(1, "Birth date is required"),
-  gender: z.enum(["male", "female"]),
+  gender: z.enum(["Male", "Female"]),
   city: z.string().min(1, "City is required"),
   address: z.string().optional(),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["manager", "fan"]),
+  role: z.enum(["fan", "manager"]), // For frontend routing only
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

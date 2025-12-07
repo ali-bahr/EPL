@@ -113,7 +113,7 @@ export const apiClient = new ApiClient(API_BASE_URL);
 
 // API Service Functions
 export const authApi = {
-  register: (data: unknown) => apiClient.post('/api/v1/Auth/register', data),
+  register: (data: unknown) => apiClient.post('/api/v1/Auth/signup-fan', data),
   login: (data: unknown) => apiClient.post('/api/v1/Auth/login', data),
   logout: () => apiClient.post('/api/v1/Auth/logout'),
   getCurrentUser: () => apiClient.get('/api/v1/Auth/me'),
@@ -148,4 +148,12 @@ export const userApi = {
   getById: (id: string | number) => apiClient.get(`/api/v1/User/${id}`),
   update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/User/${id}`, data),
   delete: (id: string | number) => apiClient.delete(`/api/v1/User/${id}`),
+};
+
+export const adminApi = {
+  getUnconfirmedAccounts: (pageIndex = 1, pageSize = 10) => 
+    apiClient.get(`/api/v1/AdminContorller/unconfirmed-accounts?pageIndex=${pageIndex}&pageSize=${pageSize}`),
+  confirmAccount: (id: string) => apiClient.patch(`/api/v1/AdminContorller/confirm-account/${id}`),
+  rejectAccount: (id: string) => apiClient.patch(`/api/v1/AdminContorller/reject-account/${id}`),
+  deleteAccount: (id: string) => apiClient.delete(`/api/v1/AdminContorller/delete-account/${id}`),
 };
