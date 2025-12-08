@@ -31,6 +31,30 @@ export default function CustomerDashboard() {
 
   const { data: reservations, isLoading } = useQuery<ReservationWithMatch[]>({
     queryKey: ["/api/v1/Reservation"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/v1/Reservation");
+      const result = await response.json();
+      console.log("Reservations API response:", result);
+      // Extract from response structure {success, statusCode, message, data: {items: [...]}}
+      const items = result?.data?.items || [];
+      console.log("Extracted reservations:", items);
+      
+      // Map API properties to expected format
+      return items.map((item: any) => ({
+        ...item,
+        // Map match properties
+        match: item.match ? {
+          ...item.match,
+          dateTime: item.match.scheduledDateTime,
+          homeTeam: item.match.homeTeam?.name || '',
+          awayTeam: item.match.awayTeam?.name || '',
+        } : null,
+        // Map seat properties to top level
+        seatRow: item.seat?.rowNumber ?? 0,
+        seatNumber: item.seat?.seatNumber ?? 0,
+        ticketNumber: item.id, // Use reservation ID as ticket number
+      }));
+    },
   });
 
   const cancelMutation = useMutation({
@@ -52,20 +76,28 @@ export default function CustomerDashboard() {
     },
   });
 
-  const groupedReservations = reservations?.reduce((acc, res) => {
-    if (!acc[res.matchId]) {
-      acc[res.matchId] = {
+  // Ensure reservations is an array before using reduce
+  const groupedReservations = Array.isArray(reservations) ? reservations.reduce((acc, res) => {
+    // Skip reservations without match data
+    if (!res.match || !res.match.id) {
+      console.warn("Reservation missing match data:", res);
+      return acc;
+    }
+    
+    const matchId = res.match.id;
+    if (!acc[matchId]) {
+      acc[matchId] = {
         match: res.match,
         reservations: [],
       };
     }
-    acc[res.matchId].reservations.push(res);
+    acc[matchId].reservations.push(res);
     return acc;
-  }, {} as Record<string, { match: MatchWithStadium; reservations: ReservationWithMatch[] }>);
+  }, {} as Record<string, { match: MatchWithStadium; reservations: ReservationWithMatch[] }>) : {};
 
   const matchGroups = groupedReservations ? Object.values(groupedReservations) : [];
-  const upcomingGroups = matchGroups.filter(g => new Date(g.match.dateTime) > new Date());
-  const pastGroups = matchGroups.filter(g => new Date(g.match.dateTime) <= new Date());
+  const upcomingGroups = matchGroups.filter(g => g.match?.dateTime && new Date(g.match.dateTime) > new Date());
+  const pastGroups = matchGroups.filter(g => g.match?.dateTime && new Date(g.match.dateTime) <= new Date());
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -164,51 +196,52 @@ export default function CustomerDashboard() {
                       <CardContent>
                         <div className="space-y-3">
                           {matchReservations.map((res) => (
-                            <div
-                              key={res.id}
-                              className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/50"
-                              data-testid={`reservation-${res.id}`}
-                            >
-                              <div className="flex items-center gap-4 flex-wrap">
-                                <Badge variant="outline">
-                                  Row {res.seatRow + 1}, Seat {res.seatNumber + 1}
-                                </Badge>
-                                <div className="flex items-center gap-2">
-                                  <Ticket className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm font-mono">{res.ticketNumber}</span>
+                            <Link key={res.id} href={`/reservation/${res.id}`}>
+                              <div
+                                className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                                data-testid={`reservation-${res.id}`}
+                              >
+                                <div className="flex items-center gap-4 flex-wrap">
+                                  <Badge variant="outline">
+                                    Row {res.seatRow + 1}, Seat {res.seatNumber + 1}
+                                  </Badge>
+                                  <div className="flex items-center gap-2">
+                                    <Ticket className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm font-mono">{res.ticketNumber}</span>
+                                  </div>
                                 </div>
+                                {canCancel ? (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild onClick={(e) => e.preventDefault()}>
+                                      <Button size="sm" variant="ghost" data-testid={`button-cancel-${res.id}`}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Cancel Reservation</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to cancel this reservation? This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Keep Reservation</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => cancelMutation.mutate(res.id)}
+                                          className="bg-destructive text-destructive-foreground"
+                                        >
+                                          Cancel Reservation
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Cannot cancel
+                                  </Badge>
+                                )}
                               </div>
-                              {canCancel ? (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="ghost" data-testid={`button-cancel-${res.id}`}>
-                                      <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Cancel Reservation</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to cancel this reservation? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Keep Reservation</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => cancelMutation.mutate(res.id)}
-                                        className="bg-destructive text-destructive-foreground"
-                                      >
-                                        Cancel Reservation
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              ) : (
-                                <Badge variant="secondary" className="text-xs">
-                                  Cannot cancel
-                                </Badge>
-                              )}
-                            </div>
+                            </Link>
                           ))}
                         </div>
                         {!canCancel && (

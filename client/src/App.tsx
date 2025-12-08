@@ -24,6 +24,7 @@ import ManagerReferees from "@/pages/manager/referees";
 import ManagerLinesmen from "@/pages/manager/linesmen";
 import ManagerTeams from "@/pages/manager/teams";
 import CustomerDashboard from "@/pages/customer/dashboard";
+import ReservationDetail from "@/pages/reservation-detail";
 import Profile from "@/pages/profile";
 
 function ProtectedRoute({ 
@@ -131,6 +132,12 @@ function Router() {
       <Route path="/dashboard">
         <ProtectedRoute roles={["fan"]}>
           <CustomerDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/reservation/:id">
+        <ProtectedRoute roles={["fan"]}>
+          <ReservationDetail />
         </ProtectedRoute>
       </Route>
       
