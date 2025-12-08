@@ -51,14 +51,23 @@ export default function ManagerMatches() {
 
   const deleteMutation = useMutation({
     mutationFn: async (matchId: string) => {
+      console.log("Deleting match:", matchId);
       const response = await apiRequest("DELETE", `/api/v1/Match/${matchId}`);
+      if (response.status === 204 || response.status === 200) {
+        console.log("Match deleted successfully");
+        return { success: true };
+      }
       return response.json();
     },
     onSuccess: () => {
+      console.log("Invalidating match queries");
+      // Invalidate all match-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/v1/Match"] });
+      queryClient.refetchQueries({ queryKey: ["/api/v1/Match"] });
       toast({ title: "Match deleted successfully" });
     },
     onError: (error: Error) => {
+      console.error("Delete match error:", error);
       toast({ title: "Failed to delete match", description: error.message, variant: "destructive" });
     },
   });

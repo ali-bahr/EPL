@@ -36,14 +36,22 @@ export default function ManagerStadiums() {
   console.log("Stadiums loaded:", stadiums);
   const deleteMutation = useMutation({
     mutationFn: async (stadiumId: string) => {
+      console.log("Deleting stadium:", stadiumId);
       const response = await apiRequest("DELETE", `/api/v1/Stadium/${stadiumId}`);
+      if (response.status === 204 || response.status === 200) {
+        console.log("Stadium deleted successfully");
+        return { success: true };
+      }
       return response.json();
     },
     onSuccess: () => {
+      console.log("Invalidating stadium queries");
       queryClient.invalidateQueries({ queryKey: ["/api/v1/Stadium"] });
+      queryClient.refetchQueries({ queryKey: ["/api/v1/Stadium"] });
       toast({ title: "Stadium deleted successfully" });
     },
     onError: (error: Error) => {
+      console.error("Delete stadium error:", error);
       toast({
         title: "Failed to delete stadium",
         description: error.message,

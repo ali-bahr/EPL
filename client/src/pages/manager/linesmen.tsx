@@ -67,6 +67,7 @@ export default function ManagerLinesmen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/Linesman"] });
+      queryClient.refetchQueries({ queryKey: ["/api/v1/Linesman"] });
       toast({ title: "Linesman deleted successfully" });
     },
     onError: (error: Error) => {

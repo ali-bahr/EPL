@@ -92,6 +92,7 @@ export default function ManagerTeams() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/Team"] });
+      queryClient.refetchQueries({ queryKey: ["/api/v1/Team"] });
       toast({ title: "Team deleted successfully" });
     },
     onError: (error: Error) => {

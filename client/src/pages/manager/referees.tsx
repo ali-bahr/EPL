@@ -67,6 +67,7 @@ export default function ManagerReferees() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/Referee"] });
+      queryClient.refetchQueries({ queryKey: ["/api/v1/Referee"] });
       toast({ title: "Referee deleted successfully" });
     },
     onError: (error: Error) => {
