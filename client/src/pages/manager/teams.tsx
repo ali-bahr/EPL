@@ -36,6 +36,7 @@ export default function ManagerTeams() {
     queryKey: ["/api/v1/Team"],
     queryFn: async () => {
       const res = await teamApi.getAll();
+      console.log("Teams API Response:", res);
       return res;
     },
   });
@@ -44,12 +45,17 @@ export default function ManagerTeams() {
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
       const res = await stadiumApi.getAll();
+      console.log("Stadiums API Response:", res);
       return res;
     },
   });
 
   const teams = response?.data?.items || [];
   const stadiums = stadiumsResponse?.data?.items || [];
+
+  console.log("Teams:", teams);
+  console.log("Stadiums:", stadiums);
+  console.log("Is Loading:", isLoading);
 
   const form = useForm<InsertTeam>({
     resolver: zodResolver(insertTeamSchema),
@@ -81,6 +87,7 @@ export default function ManagerTeams() {
 
   const deleteMutation = useMutation({
     mutationFn: async (teamId: string) => {
+      // Note: Backend may not support DELETE yet, returning 405
       return await teamApi.delete(teamId);
     },
     onSuccess: () => {
@@ -90,7 +97,9 @@ export default function ManagerTeams() {
     onError: (error: Error) => {
       toast({
         title: "Failed to delete team",
-        description: error.message,
+        description: error.message === "Method Not Allowed" 
+          ? "Team deletion is not supported by the backend yet" 
+          : error.message,
         variant: "destructive",
       });
     },
