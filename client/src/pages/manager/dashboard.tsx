@@ -6,10 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { MatchWithStadium, Stadium } from "@shared/schema";
 import { format } from "date-fns";
+import { matchApi } from "@/lib/api";
+import { adaptMatchList, type MatchListResponse } from "@/lib/match-adapter";
 
 export default function ManagerDashboard() {
   const { data: matches, isLoading: matchesLoading } = useQuery<MatchWithStadium[]>({
     queryKey: ["/api/v1/Match"],
+    queryFn: async () => {
+      const response = await matchApi.getAll() as MatchListResponse;
+      return adaptMatchList(response);
+    },
   });
 
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({

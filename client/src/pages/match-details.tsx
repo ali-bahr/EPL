@@ -8,13 +8,21 @@ import { SeatMap } from "@/components/seat-map";
 import { useAuth } from "@/lib/auth";
 import type { MatchWithStadium } from "@shared/schema";
 import { format } from "date-fns";
+import { matchApi } from "@/lib/api";
+import { adaptMatch, type ApiMatch } from "@/lib/match-adapter";
 
 export default function MatchDetails() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
 
-  const { data: match, isLoading } = useQuery<MatchWithStadium>({
+  const { data: match, isLoading } = useQuery<MatchWithStadium | null>({
     queryKey: ["/api/v1/Match", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await matchApi.getById(id) as ApiMatch;
+      return adaptMatch(response);
+    },
   });
 
   if (isLoading) {

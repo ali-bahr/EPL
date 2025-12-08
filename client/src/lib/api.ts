@@ -116,8 +116,8 @@ export const authApi = {
   register: (data: unknown) => apiClient.post('/api/v1/Auth/signup-fan', data),
   login: (data: unknown) => apiClient.post('/api/v1/Auth/login', data),
   logout: () => apiClient.post('/api/v1/Auth/logout'),
-  getCurrentUser: () => apiClient.get('/api/v1/Auth/me'),
-  updateProfile: (data: unknown) => apiClient.patch('/api/v1/Auth/me', data),
+  getCurrentUser: () => apiClient.get('/api/v1/User'),
+  updateProfile: (data: unknown) => apiClient.patch('/api/v1/User', data),
 };
 
 export const matchApi = {
@@ -148,6 +148,22 @@ export const userApi = {
   getById: (id: string | number) => apiClient.get(`/api/v1/User/${id}`),
   update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/User/${id}`, data),
   delete: (id: string | number) => apiClient.delete(`/api/v1/User/${id}`),
+};
+
+export const teamApi = {
+  getAll: () => apiClient.get('/api/v1/Team'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/Team/${id}`),
+  create: (data: unknown) => apiClient.post('/api/v1/Team', data),
+  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Team/${id}`, data),
+  delete: (id: string | number) => apiClient.delete(`/api/v1/Team/${id}`),
+};
+
+export const refereeApi = {
+  getAll: () => apiClient.get('/api/v1/Referee'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/Referee/${id}`),
+  create: (data: unknown) => apiClient.post('/api/v1/Referee', data),
+  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Referee/${id}`, data),
+  delete: (id: string | number) => apiClient.delete(`/api/v1/Referee/${id}`),
 };
 
 export const adminApi = {

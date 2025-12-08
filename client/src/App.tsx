@@ -25,14 +25,14 @@ import Profile from "@/pages/profile";
 
 function ProtectedRoute({ 
   children, 
-  roles 
+  role 
 }: { 
   children: React.ReactNode; 
-  roles?: string[]; 
+  role?: string; 
 }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-
+  console.log("User: ", user)
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -40,8 +40,10 @@ function ProtectedRoute({
       </div>
     );
   }
+    console.log("Check if the user is logged in")
 
   if (!user) {
+    console.log("No user loggedd in, redirecting to login")
     setLocation("/login");
     return null;
   }
@@ -59,7 +61,7 @@ function ProtectedRoute({
     );
   }
 
-  if (roles && !roles.includes(user.role)) {
+  if (role) {
     setLocation("/");
     return null;
   }
@@ -79,6 +81,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // user.roles: ['Admin', 'Fan']
   if (user) {
     switch (user.role) {
       case "admin":

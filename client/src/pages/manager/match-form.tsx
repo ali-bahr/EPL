@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertMatchSchema, EGYPTIAN_TEAMS, type InsertMatch, type Match, type Stadium } from "@shared/schema";
+import { matchApi, teamApi, refereeApi, stadiumApi } from "@/lib/api";
+import { adaptMatch, mapToCreateMatchRequest, type ApiMatch } from "@/lib/match-adapter";
 
 export default function MatchForm() {
   const { id } = useParams<{ id: string }>();
@@ -25,19 +27,39 @@ export default function MatchForm() {
   });
 
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({
-    queryKey: ["/api/stadiums"],
+    queryKey: ["/api/v1/Stadium"],
+    queryFn: async () => {
+      const response = await stadiumApi.getAll() as any;
+      return Array.isArray(response?.items) ? response.items : response;
+    },
   });
 
-  const form = useForm<InsertMatch>({
+  const { data: teams, isLoading: teamsLoading } = useQuery<any[]>({
+    queryKey: ["/api/v1/Team"],
+    queryFn: async () => {
+      const response = await teamApi.getAll() as any;
+      return Array.isArray(response?.items) ? response.items : response;
+    },
+  });
+
+  const { data: referees, isLoading: refereesLoading } = useQuery<any[]>({
+    queryKey: ["/api/v1/Referee"],
+    queryFn: async () => {
+      const response = await refereeApi.getAll() as any;
+      return Array.isArray(response?.items) ? response.items : response;
+    },
+  });
+
+  const form = useForm<any>({
     resolver: zodResolver(insertMatchSchema),
     defaultValues: {
-      homeTeam: "Al Ahly",
-      awayTeam: "Zamalek",
+      homeTeamId: "",
+      awayTeamId: "",
       stadiumId: "",
       dateTime: "",
-      mainReferee: "",
-      linesman1: "",
-      linesman2: "",
+      refereeId: "",
+      linesman1Id: "",
+      linesman2Id: "",
     },
   });
 
@@ -49,34 +71,39 @@ export default function MatchForm() {
         .slice(0, 16);
       
       form.reset({
-        homeTeam: match.homeTeam,
-        awayTeam: match.awayTeam,
+        homeTeamId: match.homeTeam,
+        awayTeamId: match.awayTeam,
         stadiumId: match.stadiumId,
         dateTime: localDateTime,
-        mainReferee: match.mainReferee,
-        linesman1: match.linesman1,
-        linesman2: match.linesman2,
+        refereeId: match.mainReferee,
+        linesman1Id: match.linesman1,
+        linesman2Id: match.linesman2,
       });
     }
   }, [match, form]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: InsertMatch) => {
-      const payload = {
-        ...data,
-        dateTime: new Date(data.dateTime).toISOString(),
-      };
+    mutationFn: async (data: any) => {
+      const payload = mapToCreateMatchRequest(
+        data.homeTeamId,
+        data.awayTeamId,
+        data.stadiumId,
+        data.refereeId,
+        data.linesman1Id,
+        data.linesman2Id,
+        data.dateTime
+      );
       
       if (isEditing) {
-        const response = await apiRequest("PATCH", `/api/matches/${id}`, payload);
-        return response.json();
+        const response = await matchApi.update(id, payload) as ApiMatch;
+        return adaptMatch(response);
       } else {
-        const response = await apiRequest("POST", "/api/matches", payload);
-        return response.json();
+        const response = await matchApi.create(payload) as ApiMatch;
+        return adaptMatch(response);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/Match"] });
       toast({
         title: isEditing ? "Match Updated" : "Match Created",
         description: isEditing ? "The match has been updated successfully." : "The new match has been created.",
@@ -128,7 +155,7 @@ export default function MatchForm() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="homeTeam"
+                  name="homeTeamId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Home Team *</FormLabel>
@@ -139,11 +166,17 @@ export default function MatchForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {EGYPTIAN_TEAMS.map((team) => (
-                            <SelectItem key={team} value={team}>
-                              {team}
-                            </SelectItem>
-                          ))}
+                          {teamsLoading ? (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading teams...</div>
+                          ) : teams && teams.length > 0 ? (
+                            teams.map((team) => (
+                              <SelectItem key={team.id} value={team.id}>
+                                {team.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">No teams available</div>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -153,7 +186,7 @@ export default function MatchForm() {
 
                 <FormField
                   control={form.control}
-                  name="awayTeam"
+                  name="awayTeamId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Away Team *</FormLabel>
@@ -164,11 +197,17 @@ export default function MatchForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {EGYPTIAN_TEAMS.map((team) => (
-                            <SelectItem key={team} value={team}>
-                              {team}
-                            </SelectItem>
-                          ))}
+                          {teamsLoading ? (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading teams...</div>
+                          ) : teams && teams.length > 0 ? (
+                            teams.map((team) => (
+                              <SelectItem key={team.id} value={team.id}>
+                                {team.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">No teams available</div>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -231,17 +270,30 @@ export default function MatchForm() {
                 
                 <FormField
                   control={form.control}
-                  name="mainReferee"
+                  name="refereeId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Main Referee *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter referee name"
-                          data-testid="input-main-referee"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-main-referee">
+                            <SelectValue placeholder="Select referee" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {refereesLoading ? (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
+                          ) : referees && referees.length > 0 ? (
+                            referees.map((ref) => (
+                              <SelectItem key={ref.id} value={ref.id}>
+                                {ref.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">No referees available</div>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -250,17 +302,30 @@ export default function MatchForm() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="linesman1"
+                    name="linesman1Id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>First Linesman *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter linesman name"
-                            data-testid="input-linesman1"
-                            {...field}
-                          />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-linesman1">
+                              <SelectValue placeholder="Select linesman" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {refereesLoading ? (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
+                            ) : referees && referees.length > 0 ? (
+                              referees.map((ref) => (
+                                <SelectItem key={ref.id} value={ref.id}>
+                                  {ref.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No referees available</div>
+                            )}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -268,17 +333,30 @@ export default function MatchForm() {
 
                   <FormField
                     control={form.control}
-                    name="linesman2"
+                    name="linesman2Id"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Second Linesman *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter linesman name"
-                            data-testid="input-linesman2"
-                            {...field}
-                          />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-linesman2">
+                              <SelectValue placeholder="Select linesman" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {refereesLoading ? (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
+                            ) : referees && referees.length > 0 ? (
+                              referees.map((ref) => (
+                                <SelectItem key={ref.id} value={ref.id}>
+                                  {ref.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No referees available</div>
+                            )}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

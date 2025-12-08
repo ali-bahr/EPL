@@ -31,6 +31,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MatchWithStadium } from "@shared/schema";
 import { EGYPTIAN_TEAMS } from "@shared/schema";
 import { format } from "date-fns";
+import { matchApi } from "@/lib/api";
+import { adaptMatchList, type MatchListResponse } from "@/lib/match-adapter";
 
 export default function ManagerMatches() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +41,10 @@ export default function ManagerMatches() {
 
   const { data: matches, isLoading } = useQuery<MatchWithStadium[]>({
     queryKey: ["/api/v1/Match"],
+    queryFn: async () => {
+      const response = await matchApi.getAll() as MatchListResponse;
+      return adaptMatchList(response);
+    },
   });
 
   const deleteMutation = useMutation({

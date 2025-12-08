@@ -17,6 +17,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getSocket } from "@/lib/socket";
 import type { MatchWithStadium } from "@shared/schema";
 import { format } from "date-fns";
+import { matchApi } from "@/lib/api";
+import { adaptMatch, type ApiMatch } from "@/lib/match-adapter";
 
 const paymentSchema = z.object({
   creditCardNumber: z.string().length(16, "Card number must be 16 digits").regex(/^\d+$/, "Only digits allowed"),
@@ -44,8 +46,14 @@ export default function MatchReserve() {
   const [ticketNumbers, setTicketNumbers] = useState<string[]>([]);
   const [reservedSeats, setReservedSeats] = useState<Array<{ row: number; seat: number }>>([]);
 
-  const { data: match, isLoading } = useQuery<MatchWithStadium>({
+  const { data: match, isLoading } = useQuery<MatchWithStadium | null>({
     queryKey: ["/api/v1/Match", id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await matchApi.getById(id) as ApiMatch;
+      return adaptMatch(response);
+    },
   });
 
   // Setup Socket.IO for real-time seat updates
