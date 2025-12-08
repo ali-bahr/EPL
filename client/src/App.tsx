@@ -20,6 +20,8 @@ import ManagerMatches from "@/pages/manager/matches";
 import MatchForm from "@/pages/manager/match-form";
 import ManagerStadiums from "@/pages/manager/stadiums";
 import StadiumForm from "@/pages/manager/stadium-form";
+import ManagerReferees from "@/pages/manager/referees";
+import ManagerLinesmen from "@/pages/manager/linesmen";
 import CustomerDashboard from "@/pages/customer/dashboard";
 import Profile from "@/pages/profile";
 
@@ -182,6 +184,18 @@ function Router() {
       <Route path="/manager/stadiums/new">
         <ProtectedRoute roles={["admin", "manager"]}>
           <StadiumForm />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/manager/referees">
+        <ProtectedRoute roles={["admin", "manager"]}>
+          <ManagerReferees />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/manager/linesmen">
+        <ProtectedRoute roles={["admin", "manager"]}>
+          <ManagerLinesmen />
         </ProtectedRoute>
       </Route>
       

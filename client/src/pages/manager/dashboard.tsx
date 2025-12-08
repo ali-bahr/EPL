@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Plus, ArrowRight, Loader2, Trophy } from "lucide-react";
+import { Calendar, MapPin, Plus, ArrowRight, Loader2, Trophy, Users, Flag } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,6 +127,20 @@ export default function ManagerDashboard() {
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
             </Link>
+            <Link href="/manager/referees">
+              <Button variant="outline" className="w-full justify-start" data-testid="link-manage-referees">
+                <Users className="mr-2 h-4 w-4" />
+                Manage Referees
+                <ArrowRight className="ml-auto h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/manager/linesmen">
+              <Button variant="outline" className="w-full justify-start" data-testid="link-manage-linesmen">
+                <Flag className="mr-2 h-4 w-4" />
+                Manage Linesmen
+                <ArrowRight className="ml-auto h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -175,7 +189,7 @@ export default function ManagerDashboard() {
                 <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground">No upcoming matches</p>
                 <Link href="/manager/matches/new">
-                  <Button variant="link" className="mt-2">
+                  <Button variant="ghost" className="mt-2">
                     Create your first match
                   </Button>
                 </Link>

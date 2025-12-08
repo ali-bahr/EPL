@@ -86,15 +86,49 @@ export const insertStadiumSchema = z.object({
 
 export type InsertStadium = z.infer<typeof insertStadiumSchema>;
 
+export interface Referee {
+  id: string;
+  name: string;
+  isInternational: boolean;
+  createdAt: string;
+  updatedOn: string;
+}
+
+export const insertRefereeSchema = z.object({
+  name: z.string().min(1, "Referee name is required"),
+  isInternational: z.boolean().default(false),
+});
+
+export type InsertReferee = z.infer<typeof insertRefereeSchema>;
+
+export interface Linesman {
+  id: string;
+  name: string;
+  isInternational: boolean;
+  createdAt: string;
+  updatedOn: string;
+}
+
+export const insertLinesmanSchema = z.object({
+  name: z.string().min(1, "Linesman name is required"),
+  isInternational: z.boolean().default(false),
+});
+
+export type InsertLinesman = z.infer<typeof insertLinesmanSchema>;
+
 export interface Match {
   id: string;
   homeTeam: EgyptianTeam;
   awayTeam: EgyptianTeam;
   stadiumId: string;
   dateTime: string;
-  mainReferee: string;
-  linesman1: string;
-  linesman2: string;
+  mainRefereeId: string;
+  linesman1Id: string;
+  linesman2Id: string;
+  // Optional: Keep these for backward compatibility or display
+  mainReferee?: string;
+  linesman1?: string;
+  linesman2?: string;
 }
 
 export const insertMatchSchema = z.object({
@@ -102,9 +136,9 @@ export const insertMatchSchema = z.object({
   awayTeam: z.enum(EGYPTIAN_TEAMS),
   stadiumId: z.string().min(1, "Stadium is required"),
   dateTime: z.string().min(1, "Date and time is required"),
-  mainReferee: z.string().min(1, "Main referee is required"),
-  linesman1: z.string().min(1, "First linesman is required"),
-  linesman2: z.string().min(1, "Second linesman is required"),
+  mainRefereeId: z.string().min(1, "Main referee is required"),
+  linesman1Id: z.string().min(1, "First linesman is required"),
+  linesman2Id: z.string().min(1, "Second linesman is required"),
 }).refine(data => data.homeTeam !== data.awayTeam, {
   message: "Home team and away team must be different",
   path: ["awayTeam"],

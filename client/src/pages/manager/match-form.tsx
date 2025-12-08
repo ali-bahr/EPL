@@ -11,8 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { insertMatchSchema, EGYPTIAN_TEAMS, type InsertMatch, type Match, type Stadium } from "@shared/schema";
-import { matchApi, teamApi, refereeApi, stadiumApi } from "@/lib/api";
+import { insertMatchSchema, EGYPTIAN_TEAMS, type InsertMatch, type Match, type Stadium, type Referee, type Linesman } from "@shared/schema";
+import { matchApi, teamApi, refereeApi, linesmanApi, stadiumApi } from "@/lib/api";
 import { adaptMatch, mapToCreateMatchRequest, type ApiMatch } from "@/lib/match-adapter";
 
 export default function MatchForm() {
@@ -30,7 +30,11 @@ export default function MatchForm() {
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
       const response = await stadiumApi.getAll() as any;
-      return Array.isArray(response?.items) ? response.items : response;
+      // Backend returns: {success, statusCode, message, data: {items, pageIndex, ...}}
+      if (response?.data?.items) {
+        return response.data.items;
+      }
+      return [];
     },
   });
 
@@ -38,15 +42,35 @@ export default function MatchForm() {
     queryKey: ["/api/v1/Team"],
     queryFn: async () => {
       const response = await teamApi.getAll() as any;
-      return Array.isArray(response?.items) ? response.items : response;
+      // Backend returns: {success, statusCode, message, data: {items, pageIndex, ...}}
+      if (response?.data?.items) {
+        return response.data.items;
+      }
+      return [];
     },
   });
 
-  const { data: referees, isLoading: refereesLoading } = useQuery<any[]>({
+  const { data: referees, isLoading: refereesLoading } = useQuery<Referee[]>({
     queryKey: ["/api/v1/Referee"],
     queryFn: async () => {
       const response = await refereeApi.getAll() as any;
-      return Array.isArray(response?.items) ? response.items : response;
+      // Backend returns: {success, statusCode, message, data: {items, pageIndex, ...}}
+      if (response?.data?.items) {
+        return response.data.items;
+      }
+      return [];
+    },
+  });
+
+  const { data: linesmen, isLoading: linesmenLoading } = useQuery<Linesman[]>({
+    queryKey: ["/api/v1/Linesman"],
+    queryFn: async () => {
+      const response = await linesmanApi.getAll() as any;
+      // Backend returns: {success, statusCode, message, data: {items, pageIndex, ...}}
+      if (response?.data?.items) {
+        return response.data.items;
+      }
+      return [];
     },
   });
 
@@ -57,7 +81,7 @@ export default function MatchForm() {
       awayTeamId: "",
       stadiumId: "",
       dateTime: "",
-      refereeId: "",
+      mainRefereeId: "",
       linesman1Id: "",
       linesman2Id: "",
     },
@@ -75,9 +99,9 @@ export default function MatchForm() {
         awayTeamId: match.awayTeam,
         stadiumId: match.stadiumId,
         dateTime: localDateTime,
-        refereeId: match.mainReferee,
-        linesman1Id: match.linesman1,
-        linesman2Id: match.linesman2,
+        mainRefereeId: match.mainRefereeId,
+        linesman1Id: match.linesman1Id,
+        linesman2Id: match.linesman2Id,
       });
     }
   }, [match, form]);
@@ -88,7 +112,7 @@ export default function MatchForm() {
         data.homeTeamId,
         data.awayTeamId,
         data.stadiumId,
-        data.refereeId,
+        data.mainRefereeId,
         data.linesman1Id,
         data.linesman2Id,
         data.dateTime
@@ -270,7 +294,7 @@ export default function MatchForm() {
                 
                 <FormField
                   control={form.control}
-                  name="refereeId"
+                  name="mainRefereeId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Main Referee *</FormLabel>
@@ -286,7 +310,7 @@ export default function MatchForm() {
                           ) : referees && referees.length > 0 ? (
                             referees.map((ref) => (
                               <SelectItem key={ref.id} value={ref.id}>
-                                {ref.name}
+                                {ref.name} {ref.isInternational && "🌐"}
                               </SelectItem>
                             ))
                           ) : (
@@ -313,16 +337,16 @@ export default function MatchForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {refereesLoading ? (
-                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
-                            ) : referees && referees.length > 0 ? (
-                              referees.map((ref) => (
-                                <SelectItem key={ref.id} value={ref.id}>
-                                  {ref.name}
+                            {linesmenLoading ? (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading linesmen...</div>
+                            ) : linesmen && linesmen.length > 0 ? (
+                              linesmen.map((linesman) => (
+                                <SelectItem key={linesman.id} value={linesman.id}>
+                                  {linesman.name} {linesman.isInternational && "🌐"}
                                 </SelectItem>
                               ))
                             ) : (
-                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No referees available</div>
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No linesmen available</div>
                             )}
                           </SelectContent>
                         </Select>
@@ -344,16 +368,16 @@ export default function MatchForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {refereesLoading ? (
-                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
-                            ) : referees && referees.length > 0 ? (
-                              referees.map((ref) => (
-                                <SelectItem key={ref.id} value={ref.id}>
-                                  {ref.name}
+                            {linesmenLoading ? (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading linesmen...</div>
+                            ) : linesmen && linesmen.length > 0 ? (
+                              linesmen.map((linesman) => (
+                                <SelectItem key={linesman.id} value={linesman.id}>
+                                  {linesman.name} {linesman.isInternational && "🌐"}
                                 </SelectItem>
                               ))
                             ) : (
-                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No referees available</div>
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">No linesmen available</div>
                             )}
                           </SelectContent>
                         </Select>
