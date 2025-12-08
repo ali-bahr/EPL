@@ -20,15 +20,18 @@ import ManagerMatches from "@/pages/manager/matches";
 import MatchForm from "@/pages/manager/match-form";
 import ManagerStadiums from "@/pages/manager/stadiums";
 import StadiumForm from "@/pages/manager/stadium-form";
+import ManagerReferees from "@/pages/manager/referees";
+import ManagerLinesmen from "@/pages/manager/linesmen";
+import ManagerTeams from "@/pages/manager/teams";
 import CustomerDashboard from "@/pages/customer/dashboard";
 import Profile from "@/pages/profile";
 
 function ProtectedRoute({ 
   children, 
-  role 
+  roles 
 }: { 
   children: React.ReactNode; 
-  role?: string; 
+  roles?: string[]; 
 }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
@@ -61,7 +64,7 @@ function ProtectedRoute({
     );
   }
 
-  if (role) {
+  if (roles && roles.length > 0 && !roles.includes(user.role || '')) {
     setLocation("/");
     return null;
   }
@@ -182,6 +185,24 @@ function Router() {
       <Route path="/manager/stadiums/new">
         <ProtectedRoute roles={["admin", "manager"]}>
           <StadiumForm />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/manager/referees">
+        <ProtectedRoute roles={["admin", "manager"]}>
+          <ManagerReferees />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/manager/linesmen">
+        <ProtectedRoute roles={["admin", "manager"]}>
+          <ManagerLinesmen />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/manager/teams">
+        <ProtectedRoute roles={["admin", "manager"]}>
+          <ManagerTeams />
         </ProtectedRoute>
       </Route>
       

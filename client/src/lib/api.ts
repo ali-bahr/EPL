@@ -174,6 +174,14 @@ export const refereeApi = {
   delete: (id: string | number) => apiClient.delete(`/api/v1/Referee/${id}`),
 };
 
+export const linesmanApi = {
+  getAll: () => apiClient.get('/api/v1/Linesman'),
+  getById: (id: string | number) => apiClient.get(`/api/v1/Linesman/${id}`),
+  create: (data: unknown) => apiClient.post('/api/v1/Linesman', data),
+  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Linesman/${id}`, data),
+  delete: (id: string | number) => apiClient.delete(`/api/v1/Linesman/${id}`),
+};
+
 export const adminApi = {
   getAllUsers: (pageIndex = 1, pageSize = 10) => 
     apiClient.get(`/api/v1/AdminContorller/users?pageIndex=${pageIndex}&pageSize=${pageSize}`),
