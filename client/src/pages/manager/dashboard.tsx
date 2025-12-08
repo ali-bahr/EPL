@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { MatchWithStadium, Stadium } from "@shared/schema";
 import { format } from "date-fns";
-import { matchApi } from "@/lib/api";
+import { matchApi, stadiumApi } from "@/lib/api";
 import { adaptMatchList, type MatchListResponse } from "@/lib/match-adapter";
+import { adaptStadiumList, type StadiumListResponse } from "@/lib/stadium-adapter";
 
 export default function ManagerDashboard() {
   const { data: matches, isLoading: matchesLoading } = useQuery<MatchWithStadium[]>({
@@ -20,6 +21,10 @@ export default function ManagerDashboard() {
 
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({
     queryKey: ["/api/v1/Stadium"],
+    queryFn: async () => {
+      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as StadiumListResponse;
+      return adaptStadiumList(response);
+    },
   });
 
   const upcomingMatches = matches?.filter((m) => new Date(m.dateTime) > new Date()) || [];
@@ -165,7 +170,7 @@ export default function ManagerDashboard() {
                       </p>
                     </div>
                     <Badge variant="outline">
-                      {match.stadium.rows * match.stadium.seatsPerRow - match.reservedSeats.length} seats
+                      {match.stadium.numberOfRows * match.stadium.seatsPerRow - match.reservedSeats.length} seats
                     </Badge>
                   </div>
                 ))}
@@ -175,7 +180,7 @@ export default function ManagerDashboard() {
                 <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground">No upcoming matches</p>
                 <Link href="/manager/matches/new">
-                  <Button variant="link" className="mt-2">
+                  <Button className="mt-2">
                     Create your first match
                   </Button>
                 </Link>

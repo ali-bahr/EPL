@@ -35,7 +35,7 @@ export default function Login() {
       return result.data || result;
     },
     onSuccess: (userData) => {
-      console.log("Login response user:", userData);
+      console.log("Login response user:", userData);  
       // Map backend response to our User type
       const user = {
         ...userData,

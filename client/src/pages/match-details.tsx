@@ -56,7 +56,7 @@ export default function MatchDetails() {
 
   const matchDate = new Date(match.dateTime);
   const isUpcoming = matchDate > new Date();
-  const totalSeats = match.stadium.rows * match.stadium.seatsPerRow;
+  const totalSeats = match.stadium.numberOfRows * match.stadium.seatsPerRow;
   const availableSeats = totalSeats - match.reservedSeats.length;
 
   return (
@@ -137,7 +137,7 @@ export default function MatchDetails() {
               {match.stadium.name}
             </p>
             <p className="text-muted-foreground">
-              VIP Lounge: {match.stadium.rows} rows, {match.stadium.seatsPerRow} seats/row
+              VIP Lounge: {match.stadium.numberOfRows} rows, {match.stadium.seatsPerRow} seats/row
             </p>
           </CardContent>
         </Card>
@@ -198,7 +198,7 @@ export default function MatchDetails() {
       </Card>
 
       <SeatMap
-        rows={match.stadium.rows}
+        rows={match.stadium.numberOfRows}
         seatsPerRow={match.stadium.seatsPerRow}
         reservedSeats={match.reservedSeats}
         selectedSeats={[]}

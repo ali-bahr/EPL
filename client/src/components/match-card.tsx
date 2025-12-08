@@ -16,7 +16,7 @@ interface MatchCardProps {
 export function MatchCard({ match, showReserveButton = true, onReserve }: MatchCardProps) {
   const { user } = useAuth();
   const matchDate = new Date(match.dateTime);
-  const totalSeats = match.stadium.rows * match.stadium.seatsPerRow;
+  const totalSeats = match.stadium.numberOfRows * match.stadium.seatsPerRow;
   const availableSeats = totalSeats - match.reservedSeats.length;
   const isUpcoming = matchDate > new Date();
   

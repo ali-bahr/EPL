@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertMatchSchema, EGYPTIAN_TEAMS, type InsertMatch, type Match, type Stadium } from "@shared/schema";
 import { matchApi, teamApi, refereeApi, stadiumApi } from "@/lib/api";
 import { adaptMatch, mapToCreateMatchRequest, type ApiMatch } from "@/lib/match-adapter";
+import { adaptStadiumList, type StadiumListResponse } from "@/lib/stadium-adapter";
 
 export default function MatchForm() {
   const { id } = useParams<{ id: string }>();
@@ -29,8 +30,8 @@ export default function MatchForm() {
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
-      const response = await stadiumApi.getAll() as any;
-      return Array.isArray(response?.items) ? response.items : response;
+      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as StadiumListResponse;
+      return adaptStadiumList(response);
     },
   });
 
@@ -46,9 +47,15 @@ export default function MatchForm() {
     queryKey: ["/api/v1/Referee"],
     queryFn: async () => {
       const response = await refereeApi.getAll() as any;
-      return Array.isArray(response?.items) ? response.items : response;
+      console.log("Referee API response:", response);
+      // API returns { items: [...], pageIndex, pageSize, ... }
+      const items = response?.items || [];
+      console.log("Extracted referee items:", items);
+      return items;
     },
   });
+
+  console.log("Referees loaded:", referees);
 
   const form = useForm<any>({
     resolver: zodResolver(insertMatchSchema),
@@ -234,7 +241,7 @@ export default function MatchForm() {
                         ) : stadiums && stadiums.length > 0 ? (
                           stadiums.map((stadium) => (
                             <SelectItem key={stadium.id} value={stadium.id}>
-                              {stadium.name} ({stadium.rows * stadium.seatsPerRow} seats)
+                              {stadium.name} ({stadium.numberOfRows * stadium.seatsPerRow} seats)
                             </SelectItem>
                           ))
                         ) : (

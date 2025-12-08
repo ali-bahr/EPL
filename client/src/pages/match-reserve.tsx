@@ -267,7 +267,7 @@ export default function MatchReserve() {
           {step === "seats" && (
             <>
               <SeatMap
-                rows={match.stadium.rows}
+                rows={match.stadium.numberOfRows}
                 seatsPerRow={match.stadium.seatsPerRow}
                 reservedSeats={reservedSeats}
                 selectedSeats={selectedSeats}

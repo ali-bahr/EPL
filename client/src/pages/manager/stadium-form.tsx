@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertStadiumSchema, type InsertStadium } from "@shared/schema";
+import { stadiumApi } from "@/lib/api";
+import { adaptStadium, mapToCreateStadiumRequest, type ApiStadium } from "@/lib/stadium-adapter";
 
 export default function StadiumForm() {
   const [, setLocation] = useLocation();
@@ -20,19 +22,21 @@ export default function StadiumForm() {
     resolver: zodResolver(insertStadiumSchema),
     defaultValues: {
       name: "",
-      rows: 10,
+      numberOfRows: 10,
       seatsPerRow: 20,
     },
+    mode: "onChange",
   });
 
-  const watchRows = form.watch("rows");
+  const watchRows = form.watch("numberOfRows");
   const watchSeatsPerRow = form.watch("seatsPerRow");
   const totalSeats = (watchRows || 0) * (watchSeatsPerRow || 0);
 
   const saveMutation = useMutation({
     mutationFn: async (data: InsertStadium) => {
-      const response = await apiRequest("POST", "/api/v1/Stadium", data);
-      return response.json();
+      const payload = mapToCreateStadiumRequest(data.name, data.numberOfRows, data.seatsPerRow);
+      const response = await stadiumApi.create(payload) as ApiStadium;
+      return adaptStadium(response);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/Stadium"] });
@@ -85,7 +89,8 @@ export default function StadiumForm() {
                         <Input
                           placeholder="e.g., Cairo International Stadium"
                           data-testid="input-stadium-name"
-                          {...field}
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -96,7 +101,7 @@ export default function StadiumForm() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="rows"
+                    name="numberOfRows"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Number of Rows *</FormLabel>
@@ -104,13 +109,13 @@ export default function StadiumForm() {
                           <Input
                             type="number"
                             min={1}
-                            max={50}
+                            max={200}
                             data-testid="input-rows"
                             {...field}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                           />
                         </FormControl>
-                        <FormDescription>Max 50 rows</FormDescription>
+                        <FormDescription>Max 200 rows</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

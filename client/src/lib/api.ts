@@ -129,7 +129,15 @@ export const matchApi = {
 };
 
 export const stadiumApi = {
-  getAll: () => apiClient.get('/api/v1/Stadium'),
+  getAll: (name?: string, orderBy?: string, page: number = 1, pageSize: number = 10) => {
+    const params = new URLSearchParams();
+    if (name) params.append('Name', name);
+    if (orderBy) params.append('OrderBy', orderBy);
+    params.append('Page', page.toString());
+    params.append('PageSize', pageSize.toString());
+    const queryString = params.toString();
+    return apiClient.get(`/api/v1/Stadium${queryString ? '?' + queryString : ''}`);
+  },
   getById: (id: string | number) => apiClient.get(`/api/v1/Stadium/${id}`),
   create: (data: unknown) => apiClient.post('/api/v1/Stadium', data),
   update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Stadium/${id}`, data),

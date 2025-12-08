@@ -145,7 +145,7 @@ export default function ManagerMatches() {
                 <TableBody>
                   {filteredMatches.map((match) => {
                     const isUpcoming = new Date(match.dateTime) > new Date();
-                    const totalSeats = match.stadium.rows * match.stadium.seatsPerRow;
+                    const totalSeats = match.stadium.numberOfRows * match.stadium.seatsPerRow;
                     const available = totalSeats - match.reservedSeats.length;
 
                     return (

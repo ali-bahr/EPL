@@ -74,14 +74,14 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export interface Stadium {
   id: string;
   name: string;
-  rows: number;
+  numberOfRows: number;
   seatsPerRow: number;
 }
 
 export const insertStadiumSchema = z.object({
   name: z.string().min(1, "Stadium name is required"),
-  rows: z.number().min(1, "Must have at least 1 row").max(50, "Maximum 50 rows"),
-  seatsPerRow: z.number().min(1, "Must have at least 1 seat per row").max(50, "Maximum 50 seats per row"),
+  numberOfRows: z.number().min(1, "Must have at least 1 row").max(200, "Maximum 200 rows"),
+  seatsPerRow: z.number().min(1, "Must have at least 1 seat per row").max(1000, "Maximum 1000 seats per row"),
 });
 
 export type InsertStadium = z.infer<typeof insertStadiumSchema>;

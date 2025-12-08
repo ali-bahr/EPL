@@ -18,14 +18,22 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Stadium } from "@shared/schema";
+import { stadiumApi } from "@/lib/api";
+import { adaptStadiumList, type StadiumListResponse } from "@/lib/stadium-adapter";
 
 export default function ManagerStadiums() {
   const { toast } = useToast();
 
   const { data: stadiums, isLoading } = useQuery<Stadium[]>({
     queryKey: ["/api/v1/Stadium"],
+    queryFn: async () => {
+      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as any;
+      // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
+      const stadiumData = response.data || response;
+      return adaptStadiumList(stadiumData);
+    },
   });
-
+  console.log("Stadiums loaded:", stadiums);
   const deleteMutation = useMutation({
     mutationFn: async (stadiumId: string) => {
       const response = await apiRequest("DELETE", `/api/v1/Stadium/${stadiumId}`);
@@ -110,17 +118,17 @@ export default function ManagerStadiums() {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Grid className="h-4 w-4" />
-                    {stadium.rows} rows x {stadium.seatsPerRow} seats
+                    {stadium.numberOfRows} rows x {stadium.seatsPerRow} seats
                   </div>
                 </div>
                 <Badge variant="secondary">
-                  {stadium.rows * stadium.seatsPerRow} total seats
+                  {stadium.numberOfRows * stadium.seatsPerRow} total seats
                 </Badge>
 
                 <div className="mt-4 p-3 bg-muted rounded-md">
                   <p className="text-xs text-muted-foreground text-center mb-2">Seating Preview</p>
                   <div className="flex flex-col gap-0.5 items-center">
-                    {Array.from({ length: Math.min(stadium.rows, 5) }, (_, i) => (
+                    {Array.from({ length: Math.min(stadium.numberOfRows, 5) }, (_, i) => (
                       <div key={i} className="flex gap-0.5">
                         {Array.from({ length: Math.min(stadium.seatsPerRow, 10) }, (_, j) => (
                           <div key={j} className="w-2 h-2 rounded-sm bg-primary/30" />
@@ -128,7 +136,7 @@ export default function ManagerStadiums() {
                         {stadium.seatsPerRow > 10 && <span className="text-xs text-muted-foreground ml-1">...</span>}
                       </div>
                     ))}
-                    {stadium.rows > 5 && <span className="text-xs text-muted-foreground">...</span>}
+                    {stadium.numberOfRows > 5 && <span className="text-xs text-muted-foreground">...</span>}
                   </div>
                 </div>
               </CardContent>
