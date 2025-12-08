@@ -22,16 +22,20 @@ export default function MatchForm() {
   const { toast } = useToast();
   const isEditing = Boolean(id);
 
-  const { data: match, isLoading: matchLoading } = useQuery<Match>({
-    queryKey: ["/api/matches", id],
+  const { data: match, isLoading: matchLoading } = useQuery<any>({
+    queryKey: ["/api/v1/Match", id],
+    queryFn: async () => {
+      const response = await matchApi.getById(id!) as any;
+      // API returns the match object directly or wrapped in data
+      return response?.data || response;
+    },
     enabled: isEditing,
   });
 
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
-      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as StadiumListResponse;
-      // const response = await stadiumApi.getAll() as any;
+      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as any;
       // Backend returns: {success, statusCode, message, data: {items, pageIndex, ...}}
       if (response?.data?.items) {
         return response.data.items;
@@ -97,21 +101,24 @@ export default function MatchForm() {
     },
   });
 
+  console.log("Match data loaded:", match);
+  console.log("Form values:", form.watch());
+
   useEffect(() => {
     if (match) {
-      const dateTime = new Date(match.dateTime);
+      const dateTime = new Date(match.scheduledDateTime || match.dateTime);
       const localDateTime = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0, 16);
       
       form.reset({
-        homeTeamId: match.homeTeam,
-        awayTeamId: match.awayTeam,
-        stadiumId: match.stadiumId,
+        homeTeamId: match.homeTeam?.id || match.homeTeam,
+        awayTeamId: match.awayTeam?.id || match.awayTeam,
+        stadiumId: match.stadium?.id || match.stadiumId,
         dateTime: localDateTime,
-        mainRefereeId: match.mainRefereeId,
-        linesman1Id: match.linesman1Id,
-        linesman2Id: match.linesman2Id,
+        mainRefereeId: match.referee?.id || match.mainRefereeId,
+        linesman1Id: match.linesman1?.id || match.linesman1Id,
+        linesman2Id: match.linesman2?.id || match.linesman2Id,
       });
     }
   }, [match, form]);
@@ -190,13 +197,17 @@ export default function MatchForm() {
                 <FormField
                   control={form.control}
                   name="homeTeamId"
-                  render={({ field }) => (
+                  render={({ field }) => {
+                    const selectedTeam = teams?.find(t => t.id === field.value);
+                    return (
                     <FormItem>
                       <FormLabel>Home Team *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-home-team">
-                            <SelectValue placeholder="Select home team" />
+                            <SelectValue placeholder="Select home team">
+                              {selectedTeam?.name || "Select home team"}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -215,19 +226,24 @@ export default function MatchForm() {
                       </Select>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  );
+                  }}
                 />
 
                 <FormField
                   control={form.control}
                   name="awayTeamId"
-                  render={({ field }) => (
+                  render={({ field }) => {
+                    const selectedTeam = teams?.find(t => t.id === field.value);
+                    return (
                     <FormItem>
                       <FormLabel>Away Team *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger data-testid="select-away-team">
-                            <SelectValue placeholder="Select away team" />
+                            <SelectValue placeholder="Select away team">
+                              {selectedTeam?.name || "Select away team"}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -246,7 +262,8 @@ export default function MatchForm() {
                       </Select>
                       <FormMessage />
                     </FormItem>
-                  )}
+                  );
+                  }}
                 />
               </div>
 

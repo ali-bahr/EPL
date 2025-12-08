@@ -76,7 +76,7 @@ export function adaptMatch(match: ApiMatch): MatchWithStadium {
     stadium: {
       id: stadium.id || "",
       name: stadium.name || "Unknown Stadium",
-      rows: stadium.numberOfRows ?? 0,
+      numberOfRows: stadium.numberOfRows ?? 0,
       seatsPerRow: stadium.seatsPerRow ?? 0,
     },
     reservedSeats: match.reservedSeats || [],

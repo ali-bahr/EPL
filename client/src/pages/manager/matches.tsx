@@ -42,8 +42,10 @@ export default function ManagerMatches() {
   const { data: matches, isLoading } = useQuery<MatchWithStadium[]>({
     queryKey: ["/api/v1/Match"],
     queryFn: async () => {
-      const response = await matchApi.getAll() as MatchListResponse;
-      return adaptMatchList(response);
+      const response = await matchApi.getAll() as any;
+      // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
+      const matchData = response.data || response;
+      return adaptMatchList(matchData);
     },
   });
 

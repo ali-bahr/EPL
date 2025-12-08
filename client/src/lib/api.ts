@@ -124,7 +124,7 @@ export const matchApi = {
   getAll: () => apiClient.get('/api/v1/Match'),
   getById: (id: string | number) => apiClient.get(`/api/v1/Match/${id}`),
   create: (data: unknown) => apiClient.post('/api/v1/Match', data),
-  update: (id: string | number, data: unknown) => apiClient.patch(`/api/v1/Match/${id}`, data),
+  update: (id: string | number, data: unknown) => apiClient.put(`/api/v1/Match/${id}`, data),
   delete: (id: string | number) => apiClient.delete(`/api/v1/Match/${id}`),
 };
 

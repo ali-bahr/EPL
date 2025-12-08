@@ -20,8 +20,10 @@ export default function MatchDetails() {
     enabled: Boolean(id),
     queryFn: async () => {
       if (!id) return null;
-      const response = await matchApi.getById(id) as ApiMatch;
-      return adaptMatch(response);
+      const response = await matchApi.getById(id) as any;
+      // API might return wrapped response: {success, statusCode, message, data: {...}}
+      const matchData = response?.data || response;
+      return adaptMatch(matchData);
     },
   });
 
