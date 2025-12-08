@@ -39,10 +39,12 @@ export default function Login() {
       // Map backend response to our User type
       const user = {
         ...userData,
-        role: userData.roles?.[0]?.toLowerCase() || 'fan',
+        // Backend roles array has capitalized values like ["Admin"], ["Manager"], ["Fan"]
+        role: userData.roles && userData.roles.length > 0 ? userData.roles[0].toLowerCase() : 'fan',
         username: userData.userName,
-        status: 'approved' // Backend doesn't have status, assume approved if login succeeds
+        status: userData.emailConfirmed ? 'approved' : 'pending'
       };
+      console.log("Mapped user:", user);
       login(user);
       toast({
         title: "Welcome back!",
@@ -50,7 +52,8 @@ export default function Login() {
       });
       
       // Use the mapped role for navigation
-      const userRole = user.role || 'fan';
+      const userRole = user.role;
+      console.log("Navigating as role:", userRole);
       switch (userRole) {
         case "admin":
           setLocation("/admin");
@@ -58,6 +61,7 @@ export default function Login() {
         case "manager":
           setLocation("/manager");
           break;
+        case "fan":
         default:
           setLocation("/dashboard");
       }

@@ -167,9 +167,11 @@ export const refereeApi = {
 };
 
 export const adminApi = {
+  getAllUsers: (pageIndex = 1, pageSize = 10) => 
+    apiClient.get(`/api/v1/AdminContorller/users?pageIndex=${pageIndex}&pageSize=${pageSize}`),
   getUnconfirmedAccounts: (pageIndex = 1, pageSize = 10) => 
     apiClient.get(`/api/v1/AdminContorller/unconfirmed-accounts?pageIndex=${pageIndex}&pageSize=${pageSize}`),
   confirmAccount: (id: string) => apiClient.patch(`/api/v1/AdminContorller/confirm-account/${id}`),
   rejectAccount: (id: string) => apiClient.patch(`/api/v1/AdminContorller/reject-account/${id}`),
-  deleteAccount: (id: string) => apiClient.delete(`/api/v1/AdminContorller/delete-account/${id}`),
+  deleteUser: (id: string) => apiClient.delete(`/api/v1/AdminContorller/users/${id}`),
 };

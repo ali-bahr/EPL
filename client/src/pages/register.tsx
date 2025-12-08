@@ -91,6 +91,7 @@ export default function Register() {
   });
 
   const onSubmit = (data: InsertUser) => {
+    console.log("Registering user:", data);
     registerMutation.mutate(data);
   };
 
