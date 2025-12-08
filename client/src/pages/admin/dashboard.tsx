@@ -55,7 +55,8 @@ export default function AdminDashboard() {
   // Users with emailConfirmed = true are approved
   const approvedUsers = users.filter((u) => u.emailConfirmed);
   console.log('Dashboard - Approved users:', approvedUsers.length);
-  const managers = users.filter((u) => u.roles.includes("manager") || u.roles.includes("Manager"));
+  // Backend returns "Manager" with capital M - make it case-insensitive
+  const managers = users.filter((u) => u.roles.some(r => r.toLowerCase() === "manager"));
   console.log('Dashboard - Managers:', managers.length);
 
   return (
@@ -164,8 +165,8 @@ export default function AdminDashboard() {
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
-                    <Badge variant={user.roles.includes("manager") ? "default" : "secondary"}>
-                      {user.roles.length > 0 ? (user.roles.includes("manager") ? "Manager" : "Fan") : "Pending"}
+                    <Badge variant={user.roles.some(r => r.toLowerCase() === "manager") ? "default" : "secondary"}>
+                      {user.roles.length > 0 ? (user.roles.some(r => r.toLowerCase() === "manager") ? "Manager" : "Fan") : "Pending"}
                     </Badge>
                   </div>
                 ))}

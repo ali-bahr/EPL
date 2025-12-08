@@ -301,7 +301,7 @@ export default function AdminUsers() {
                             </>
                           )}
                           {/* Allow deletion for non-admin users */}
-                          {!user.roles.includes("admin") && (
+                          {!user.roles.some(r => r.toLowerCase() === "admin") && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button

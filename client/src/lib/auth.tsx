@@ -26,7 +26,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Map backend response to our User type
         const user = {
           ...userData,
-          role: userData.roles?.[0]?.toLowerCase() || 'fan',
+          // Backend roles array has capitalized values like ["Admin"], ["Manager"], ["Fan"]
+          role: userData.roles && userData.roles.length > 0 ? userData.roles[0].toLowerCase() : 'fan',
           username: userData.userName,
           // Users with emailConfirmed = false are pending approval
           status: userData.emailConfirmed ? 'approved' : 'pending'
