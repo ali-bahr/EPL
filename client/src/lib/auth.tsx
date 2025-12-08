@@ -28,8 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...userData,
           role: userData.roles?.[0]?.toLowerCase() || 'fan',
           username: userData.userName,
-          // Users with no roles are pending approval, otherwise approved
-          status: (userData.roles && userData.roles.length > 0) ? 'approved' : 'pending'
+          // Users with emailConfirmed = false are pending approval
+          status: userData.emailConfirmed ? 'approved' : 'pending'
         };
         setUser(user as User);
       } catch {

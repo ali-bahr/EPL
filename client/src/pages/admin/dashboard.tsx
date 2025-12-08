@@ -23,6 +23,7 @@ interface UsersResponse {
       address: string | null;
       gender: string;
       roles: string[];
+      emailConfirmed: boolean;
     }>;
     pageIndex: number;
     pageSize: number;
@@ -48,11 +49,13 @@ export default function AdminDashboard() {
 
   const users = response?.data?.items || [];
   console.log('Dashboard - All users:', users.length);
-  const pendingUsers = users.filter((u) => u.roles.length === 0);
+  // Users with emailConfirmed = false are pending approval
+  const pendingUsers = users.filter((u) => !u.emailConfirmed);
   console.log('Dashboard - Pending users:', pendingUsers.length, pendingUsers);
-  const approvedUsers = users.filter((u) => u.roles.length > 0);
+  // Users with emailConfirmed = true are approved
+  const approvedUsers = users.filter((u) => u.emailConfirmed);
   console.log('Dashboard - Approved users:', approvedUsers.length);
-  const managers = users.filter((u) => u.roles.includes("manager"));
+  const managers = users.filter((u) => u.roles.includes("manager") || u.roles.includes("Manager"));
   console.log('Dashboard - Managers:', managers.length);
 
   return (

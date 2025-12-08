@@ -52,6 +52,7 @@ export default function AdminUsers() {
         address: string | null;
         gender: string;
         roles: string[];
+        emailConfirmed: boolean;
       }>;
       pageIndex: number;
       pageSize: number;
@@ -151,28 +152,31 @@ export default function AdminUsers() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Check if user has the specified role
-    const userRole = user.roles.length > 0 ? user.roles[0] : "fan";
+    const userRole = user.roles.length > 0 ? user.roles[0].toLowerCase() : "fan";
     const matchesRole = roleFilter === "all" || userRole === roleFilter;
     
-    // Users with no roles are unconfirmed/pending
-    const userStatus = user.roles.length === 0 ? "pending" : "approved";
+    // Users with emailConfirmed = false are pending
+    const userStatus = user.emailConfirmed ? "approved" : "pending";
     const matchesStatus = statusFilter === "all" || userStatus === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const getStatusBadge = (roles: string[]) => {
-    if (roles.length === 0) {
+  const getStatusBadge = (emailConfirmed: boolean) => {
+    if (!emailConfirmed) {
       return <Badge variant="secondary" className="bg-chart-2/20 text-chart-2 border-chart-2/30">Pending</Badge>;
     }
     return <Badge variant="default">Approved</Badge>;
   };
 
-  const getRoleBadge = (roles: string[]) => {
-    if (roles.length === 0) {
+  const getRoleBadge = (roles: string[], emailConfirmed: boolean) => {
+    if (!emailConfirmed) {
       return <Badge variant="secondary">Unconfirmed</Badge>;
     }
-    const role = roles[0];
+    if (roles.length === 0) {
+      return <Badge variant="secondary">Fan</Badge>;
+    }
+    const role = roles[0].toLowerCase();
     switch (role) {
       case "admin":
         return <Badge variant="destructive">Admin</Badge>;
@@ -269,12 +273,12 @@ export default function AdminUsers() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{user.userName}</TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell>{getRoleBadge(user.roles)}</TableCell>
-                      <TableCell>{getStatusBadge(user.roles)}</TableCell>
+                      <TableCell>{getRoleBadge(user.roles, user.emailConfirmed)}</TableCell>
+                      <TableCell>{getStatusBadge(user.emailConfirmed)}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          {/* Only show approve/reject for unconfirmed accounts (no roles) */}
-                          {user.roles.length === 0 && (
+                          {/* Only show approve/reject for unconfirmed accounts */}
+                          {!user.emailConfirmed && (
                             <>
                               <Button
                                 size="sm"
