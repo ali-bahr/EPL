@@ -116,32 +116,55 @@ export const insertLinesmanSchema = z.object({
 
 export type InsertLinesman = z.infer<typeof insertLinesmanSchema>;
 
+export interface Team {
+  id: string;
+  name: string;
+  logo: string;
+  stadium?: {
+    id: string;
+    name: string;
+    numberOfRows: number;
+    seatsPerRow: number;
+  };
+  stadiumId?: string;
+}
+
+export const insertTeamSchema = z.object({
+  name: z.string().min(1, "Team name is required"),
+  logo: z.string().url("Logo must be a valid URL").optional().or(z.literal("")),
+  stadiumId: z.string().min(1, "Stadium is required"),
+});
+
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
+
 export interface Match {
   id: string;
-  homeTeam: EgyptianTeam;
-  awayTeam: EgyptianTeam;
+  homeTeamId: string;
+  awayTeamId: string;
   stadiumId: string;
   dateTime: string;
   mainRefereeId: string;
   linesman1Id: string;
   linesman2Id: string;
   // Optional: Keep these for backward compatibility or display
+  homeTeam?: string;
+  awayTeam?: string;
   mainReferee?: string;
   linesman1?: string;
   linesman2?: string;
 }
 
 export const insertMatchSchema = z.object({
-  homeTeam: z.enum(EGYPTIAN_TEAMS),
-  awayTeam: z.enum(EGYPTIAN_TEAMS),
+  homeTeamId: z.string().min(1, "Home team is required"),
+  awayTeamId: z.string().min(1, "Away team is required"),
   stadiumId: z.string().min(1, "Stadium is required"),
   dateTime: z.string().min(1, "Date and time is required"),
   mainRefereeId: z.string().min(1, "Main referee is required"),
   linesman1Id: z.string().min(1, "First linesman is required"),
   linesman2Id: z.string().min(1, "Second linesman is required"),
-}).refine(data => data.homeTeam !== data.awayTeam, {
+}).refine(data => data.homeTeamId !== data.awayTeamId, {
   message: "Home team and away team must be different",
-  path: ["awayTeam"],
+  path: ["awayTeamId"],
 });
 
 export type InsertMatch = z.infer<typeof insertMatchSchema>;

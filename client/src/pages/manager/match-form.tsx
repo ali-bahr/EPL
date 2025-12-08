@@ -42,13 +42,19 @@ export default function MatchForm() {
     queryKey: ["/api/v1/Team"],
     queryFn: async () => {
       const response = await teamApi.getAll() as any;
+      console.log("Teams API Response:", response);
       // Backend returns: {success, statusCode, message, data: {items, pageIndex, ...}}
       if (response?.data?.items) {
+        console.log("Teams from response.data.items:", response.data.items);
         return response.data.items;
       }
+      console.log("No teams found, returning empty array");
       return [];
     },
   });
+
+  console.log("Teams data:", teams);
+  console.log("Teams loading:", teamsLoading);
 
   const { data: referees, isLoading: refereesLoading } = useQuery<Referee[]>({
     queryKey: ["/api/v1/Referee"],
