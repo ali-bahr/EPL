@@ -28,9 +28,14 @@ export default function ManagerStadiums() {
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
       const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as any;
+      console.log("Stadiums API Response (stadiums page):", response);
+      console.log("Stadiums data:", response?.data);
+      console.log("Stadiums data.items:", response?.data?.items);
       // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
-      const stadiumData = response.data || response;
-      return adaptStadiumList(stadiumData);
+      const stadiumData = response?.data || {};
+      const adapted = adaptStadiumList(stadiumData);
+      console.log("Stadiums adapted:", adapted, "length:", adapted.length);
+      return adapted;
     },
   });
   console.log("Stadiums loaded:", stadiums);

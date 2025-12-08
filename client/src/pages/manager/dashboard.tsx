@@ -14,16 +14,24 @@ export default function ManagerDashboard() {
   const { data: matches, isLoading: matchesLoading } = useQuery<MatchWithStadium[]>({
     queryKey: ["/api/v1/Match"],
     queryFn: async () => {
-      const response = await matchApi.getAll() as MatchListResponse;
-      return adaptMatchList(response);
+      const response = await matchApi.getAll() as any;
+      console.log("Matches API Response (dashboard):", response);
+      console.log("Matches response.data:", response?.data);
+      // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
+      const matchData = response?.data || {};
+      return adaptMatchList(matchData);
     },
   });
 
   const { data: stadiums, isLoading: stadiumsLoading } = useQuery<Stadium[]>({
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
-      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as StadiumListResponse;
-      return adaptStadiumList(response);
+      const response = await stadiumApi.getAll(undefined, undefined, 1, 100) as any;
+      console.log("Stadiums API Response (dashboard):", response);
+      console.log("Stadiums response.data:", response?.data);
+      // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
+      const stadiumData = response?.data || {};
+      return adaptStadiumList(stadiumData);
     },
   });
 

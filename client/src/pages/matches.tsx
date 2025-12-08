@@ -19,16 +19,19 @@ export default function Matches() {
   const { data: matches, isLoading } = useQuery<MatchWithStadium[]>({
     queryKey: ["/api/v1/Match"],
     queryFn: async () => {
-      const response = await matchApi.getAll() as MatchListResponse;
-      console.log("Match: ", response);
-      return adaptMatchList(response);
+      const response = await matchApi.getAll() as any;
+      console.log("Matches API Response (public page):", response);
+      console.log("Matches response.data:", response?.data);
+      // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
+      const matchData = response?.data || {};
+      return adaptMatchList(matchData);
     },
   });
 
   const filteredMatches = matches?.filter((match) => {
     const matchesSearch =
-      match.homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      match.awayTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (match.homeTeam || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (match.awayTeam || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       match.stadium.name.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTeam =

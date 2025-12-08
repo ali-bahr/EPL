@@ -62,6 +62,10 @@ export default function MatchForm() {
   console.log("Teams data:", teams);
   console.log("Teams loading:", teamsLoading);
 
+  // Create safe arrays to prevent "is not a function" errors
+  const teamsArray = Array.isArray(teams) ? teams : [];
+  const stadiumsArray = Array.isArray(stadiums) ? stadiums : [];
+
   const { data: referees, isLoading: refereesLoading } = useQuery<Referee[]>({
     queryKey: ["/api/v1/Referee"],
     queryFn: async () => {
@@ -87,6 +91,9 @@ export default function MatchForm() {
   });
 
   console.log("Referees loaded:", referees);
+
+  const refereesArray = Array.isArray(referees) ? referees : [];
+  const linesmenArray = Array.isArray(linesmen) ? linesmen : [];
 
   const form = useForm<any>({
     resolver: zodResolver(insertMatchSchema),
@@ -198,7 +205,7 @@ export default function MatchForm() {
                   control={form.control}
                   name="homeTeamId"
                   render={({ field }) => {
-                    const selectedTeam = teams?.find(t => t.id === field.value);
+                    const selectedTeam = teamsArray.find(t => t.id === field.value);
                     return (
                     <FormItem>
                       <FormLabel>Home Team *</FormLabel>
@@ -234,7 +241,7 @@ export default function MatchForm() {
                   control={form.control}
                   name="awayTeamId"
                   render={({ field }) => {
-                    const selectedTeam = teams?.find(t => t.id === field.value);
+                    const selectedTeam = teamsArray.find(t => t.id === field.value);
                     return (
                     <FormItem>
                       <FormLabel>Away Team *</FormLabel>
@@ -279,11 +286,11 @@ export default function MatchForm() {
                           <SelectValue placeholder="Select stadium" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {stadiumsLoading ? (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading stadiums...</div>
-                        ) : stadiums && stadiums.length > 0 ? (
-                          stadiums.map((stadium) => (
+                        <SelectContent>
+                          {stadiumsLoading ? (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading stadiums...</div>
+                          ) : stadiumsArray.length > 0 ? (
+                          stadiumsArray.map((stadium) => (
                             <SelectItem key={stadium.id} value={stadium.id}>
                               {stadium.name} ({stadium.numberOfRows * stadium.seatsPerRow} seats)
                             </SelectItem>
@@ -331,11 +338,11 @@ export default function MatchForm() {
                             <SelectValue placeholder="Select referee" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          {refereesLoading ? (
-                            <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
-                          ) : referees && referees.length > 0 ? (
-                            referees.map((ref) => (
+                          <SelectContent>
+                            {refereesLoading ? (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading referees...</div>
+                            ) : refereesArray.length > 0 ? (
+                            refereesArray.map((ref) => (
                               <SelectItem key={ref.id} value={ref.id}>
                                 {ref.name} {ref.isInternational && "🌐"}
                               </SelectItem>
@@ -363,11 +370,11 @@ export default function MatchForm() {
                               <SelectValue placeholder="Select linesman" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            {linesmenLoading ? (
-                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading linesmen...</div>
-                            ) : linesmen && linesmen.length > 0 ? (
-                              linesmen.map((linesman) => (
+                            <SelectContent>
+                              {linesmenLoading ? (
+                                <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading linesmen...</div>
+                              ) : linesmenArray.length > 0 ? (
+                              linesmenArray.map((linesman) => (
                                 <SelectItem key={linesman.id} value={linesman.id}>
                                   {linesman.name} {linesman.isInternational && "🌐"}
                                 </SelectItem>

@@ -43,9 +43,14 @@ export default function ManagerMatches() {
     queryKey: ["/api/v1/Match"],
     queryFn: async () => {
       const response = await matchApi.getAll() as any;
+      console.log("Matches API Response (matches page):", response);
+      console.log("Matches data:", response?.data);
+      console.log("Matches data.items:", response?.data?.items);
       // API returns { success, statusCode, message, data: { items, pageIndex, ... } }
-      const matchData = response.data || response;
-      return adaptMatchList(matchData);
+      const matchData = response?.data || {};
+      const adapted = adaptMatchList(matchData);
+      console.log("Matches adapted:", adapted, "length:", adapted.length);
+      return adapted;
     },
   });
 
@@ -74,8 +79,8 @@ export default function ManagerMatches() {
 
   const filteredMatches = matches?.filter((match) => {
     const matchesSearch =
-      match.homeTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      match.awayTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (match.homeTeam || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (match.awayTeam || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       match.stadium.name.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTeam =

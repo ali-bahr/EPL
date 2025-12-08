@@ -1,5 +1,4 @@
-import type { MatchWithStadium, EgyptianTeam } from "@shared/schema";
-import { EGYPTIAN_TEAMS } from "@shared/schema";
+import type { MatchWithStadium } from "@shared/schema";
 
 export interface ApiStadium {
   id: string;
@@ -54,22 +53,20 @@ const unknownStadium: ApiStadium = {
 
 const safeDate = (value?: string) => value || new Date().toISOString();
 
-const safeTeam = (name?: string): EgyptianTeam => {
-  if (name && (EGYPTIAN_TEAMS as readonly string[]).includes(name)) {
-    return name as EgyptianTeam;
-  }
-  return "Al Ahly"; // Fallback to a valid team name
-};
-
 export function adaptMatch(match: ApiMatch): MatchWithStadium {
   const stadium = match.stadium || match.homeTeam?.stadium || match.awayTeam?.stadium || unknownStadium;
 
   return {
     id: match.id,
-    homeTeam: safeTeam(match.homeTeam?.name),
-    awayTeam: safeTeam(match.awayTeam?.name),
+    homeTeamId: match.homeTeam?.id || "",
+    awayTeamId: match.awayTeam?.id || "",
+    homeTeam: match.homeTeam?.name || "Unknown Team",
+    awayTeam: match.awayTeam?.name || "Unknown Team",
     stadiumId: stadium.id || "",
     dateTime: safeDate(match.scheduledDateTime),
+    mainRefereeId: match.referee?.id || "",
+    linesman1Id: match.linesman1?.id || "",
+    linesman2Id: match.linesman2?.id || "",
     mainReferee: match.referee?.name || "TBD",
     linesman1: match.linesman1?.name || "TBD",
     linesman2: match.linesman2?.name || "TBD",
@@ -84,7 +81,14 @@ export function adaptMatch(match: ApiMatch): MatchWithStadium {
 }
 
 export function adaptMatchList(response: MatchListResponse): MatchWithStadium[] {
-  return (response?.items || []).map(adaptMatch);
+  console.log("adaptMatchList called with:", response);
+  console.log("response.items:", response?.items);
+  console.log("items is array?", Array.isArray(response?.items));
+  const items = response?.items || [];
+  console.log("items to map:", items, "length:", items.length);
+  const adapted = items.map(adaptMatch);
+  console.log("adapted matches:", adapted);
+  return adapted;
 }
 
 export interface CreateMatchRequest {

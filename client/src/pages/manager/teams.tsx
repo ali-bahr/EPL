@@ -37,6 +37,7 @@ export default function ManagerTeams() {
     queryFn: async () => {
       const res = await teamApi.getAll();
       console.log("Teams API Response:", res);
+      console.log("Teams data.items:", res?.data?.items);
       return res;
     },
   });
@@ -45,7 +46,8 @@ export default function ManagerTeams() {
     queryKey: ["/api/v1/Stadium"],
     queryFn: async () => {
       const res = await stadiumApi.getAll();
-      console.log("Stadiums API Response:", res);
+      console.log("Stadiums API Response (teams page):", res);
+      console.log("Stadiums data.items:", res?.data?.items);
       return res;
     },
   });
@@ -53,9 +55,8 @@ export default function ManagerTeams() {
   const teams = response?.data?.items || [];
   const stadiums = stadiumsResponse?.data?.items || [];
 
-  console.log("Teams:", teams);
-  console.log("Stadiums:", stadiums);
-  console.log("Is Loading:", isLoading);
+  console.log("Teams extracted:", teams, "length:", teams.length);
+  console.log("Stadiums extracted:", stadiums, "length:", stadiums.length);
 
   const form = useForm<InsertTeam>({
     resolver: zodResolver(insertTeamSchema),

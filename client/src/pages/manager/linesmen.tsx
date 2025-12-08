@@ -36,11 +36,14 @@ export default function ManagerLinesmen() {
     queryKey: ["/api/v1/Linesman"],
     queryFn: async () => {
       const res = await linesmanApi.getAll();
+      console.log("Linesmen API Response:", res);
+      console.log("Linesmen data.items:", res?.data?.items);
       return res;
     },
   });
 
-  const linesmen = response?.data?.items || response?.items || [];
+  const linesmen = response?.data?.items || [];
+  console.log("Linesmen extracted:", linesmen);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertLinesman) => {

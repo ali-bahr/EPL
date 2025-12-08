@@ -36,11 +36,14 @@ export default function ManagerReferees() {
     queryKey: ["/api/v1/Referee"],
     queryFn: async () => {
       const res = await refereeApi.getAll();
+      console.log("Referees API Response:", res);
+      console.log("Referees data.items:", res?.data?.items);
       return res;
     },
   });
 
-  const referees = response?.data?.items || response?.items || [];
+  const referees = response?.data?.items || [];
+  console.log("Referees extracted:", referees);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertReferee) => {
