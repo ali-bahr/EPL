@@ -163,9 +163,6 @@ function getNavLinks(role: string) {
       return [
         { href: "/admin", label: "Admin Dashboard" },
         { href: "/admin/users", label: "Users" },
-        { href: "/manager/matches", label: "Manage Matches" },
-        { href: "/manager/stadiums", label: "Stadiums" },
-        ...commonLinks,
       ];
     case "manager":
       return [
